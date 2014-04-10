@@ -290,11 +290,13 @@ def getPValueFromKDE(nObs, maxX, func):
 
 
 def getPValue(n, hToy):
-    if hToy.Integral() <= 0.: return 0.
+    if hToy.Integral() <= 0.:
+        return 0.
     Prob_n = hToy.GetBinContent(hToy.FindBin(n))
     Prob = 0
     for i in range(1, hToy.GetNbinsX()+1):
-        if hToy.GetBinContent(i)<= Prob_n: Prob += hToy.GetBinContent(i)
+        if hToy.GetBinContent(i) <= Prob_n:
+            Prob += hToy.GetBinContent(i)
     Prob = Prob/hToy.Integral()
     return Prob
 
@@ -321,7 +323,7 @@ def getHistogramsWriteTable(MRbins, Rsqbins, nBtagbins, fileName, dataFileName, 
 
     fileIn = rt.TFile.Open(fileName)
     myTree = fileIn.Get("myTree")
-    nToys  = myTree.GetEntries()
+    nToys = myTree.GetEntries()
     dataFile = rt.TFile.Open(dataFileName)
     workspace = dataFile.Get(Box+"/Box"+Box+"_workspace")
     #alldata = workspace.obj("sigbkg")
@@ -349,20 +351,20 @@ def getHistogramsWriteTable(MRbins, Rsqbins, nBtagbins, fileName, dataFileName, 
     table.write("\\hline\n")
     # loop over regions
     result = []
-    for i in range(0,len(MRbins)-1):
-        for j in range(0,len(Rsqbins)-1):
+    for i in range(0, len(MRbins)-1):
+        for j in range(0, len(Rsqbins)-1):
             if fit3D:
-                if btagOpt==0:
-                    sumName = "b%i_%i_1+b%i_%i_2+b%i_%i_3+" %(i,j,i,j,i,j)
-                    varNames = ["b%i_%i_1"%(i,j),"b%i_%i_2"%(i,j),"b%i_%i_3"%(i,j)]
-                elif btagOpt==1:
-                    sumName = "b%i_%i_1+" %(i,j)
-                    varNames = ["b%i_%i_1"%(i,j)]
-                elif btagOpt==23:
-                    sumName =  "b%i_%i_2+b%i_%i_3+" %(i,j,i,j)
-                    varNames = ["b%i_%i_2"%(i,j),"b%i_%i_3"%(i,j)]
+                if btagOpt == 0:
+                    sumName = "b%i_%i_1+b%i_%i_2+b%i_%i_3+" % (i, j, i, j, i, j)
+                    varNames = ["b%i_%i_1" % (i, j), "b%i_%i_2" % (i, j), "b%i_%i_3" % (i, j)]
+                elif btagOpt == 1:
+                    sumName = "b%i_%i_1+" % (i, j)
+                    varNames = ["b%i_%i_1" % (i, j)]
+                elif btagOpt == 23:
+                    sumName = "b%i_%i_2+b%i_%i_3+" % (i, j, i, j)
+                    varNames = ["b%i_%i_2" % (i, j), "b%i_%i_3" % (i, j)]
 
-                varName  = "Plus".join(varNames)
+                varName = "Plus".join(varNames)
             else:
                 varName = "b%i_%i" %(i,j)
                 sumName = "b%i_%i+" %(i,j)
@@ -391,7 +393,7 @@ def getHistogramsWriteTable(MRbins, Rsqbins, nBtagbins, fileName, dataFileName, 
                 data = alldata.reduce("MR>= %f && MR < %f && Rsq >= %f && Rsq < %f && nBtag >= %i" %(MRbins[i], MRbins[i+1], Rsqbins[j], Rsqbins[j+1], nBtagbins[0]))
             nObs = data.numEntries()
 
-            switchToKDE = decideToUseKDE(minX,maxX,htemp)
+            switchToKDE = decideToUseKDE(minX, maxX, htemp)
 
             del htemp
 
@@ -404,17 +406,18 @@ def getHistogramsWriteTable(MRbins, Rsqbins, nBtagbins, fileName, dataFileName, 
             orighisto = myhisto.Clone("orighisto")
 
             rt.gROOT.ProcessLine("delete gDirectory->FindObject(\"canvas\");")
-            c = rt.TCanvas("canvas","canvas",800,600)
+            c = rt.TCanvas("canvas", "canvas", 800, 600)
             orighisto.SetLineColor(rt.kBlack)
-            orighisto.GetXaxis().SetTitle("Event Yield in Bin (%i < M_{R} < %i, %.2f < R^{2} < %.2f)"%(MRbins[i],MRbins[i+1],Rsqbins[j],Rsqbins[j+1]))
+            orighisto.GetXaxis().SetTitle("Event Yield in Bin (%i < M_{R} < %i, %.2f < R^{2} < %.2f)"
+                                          % (MRbins[i], MRbins[i+1], Rsqbins[j], Rsqbins[j+1]))
             orighisto.GetYaxis().SetTitle("Probability")
             orighisto.GetYaxis().SetTitleOffset(1.7)
             orighisto.GetXaxis().SetTitleOffset(1.2)
             c.SetLeftMargin(0.15)
             orighisto.Draw()
             if myhisto.GetEntries() != 0:
-                if switchToKDE :#and fit3D:
-                    nExp = [rt.RooRealVar(iVar,iVar,0,maxX) for iVar in varNames]
+                if switchToKDE:  # and fit3D:
+                    nExp = [rt.RooRealVar(iVar, iVar, 0, maxX) for iVar in varNames]
                     nExpSet = rt.RooArgSet("nExpSet")
                     nExpList = rt.RooArgList("nExpList")
                     for intVar in range(0,len(nExp)):
@@ -430,16 +433,20 @@ def getHistogramsWriteTable(MRbins, Rsqbins, nBtagbins, fileName, dataFileName, 
                     # GETTING THE P-VALUE
                     pvalKDE,funcFillRight,funcFillLeft = getPValueFromKDE(nObs,maxX,func)
 
-                if switchToKDE: modeVal,rangeMin,rangeMax,probRange,funcFill68 = find68ProbRangeFromKDEMode(maxX,func)
+                if switchToKDE:
+                    modeVal, rangeMin, rangeMax, probRange, funcFill68 = find68ProbRangeFromKDEMode(maxX, func)
 
-                else: modeVal,rangeMin,rangeMax = find68ProbRange(myhisto)
+                else:
+                    modeVal, rangeMin, rangeMax = find68ProbRange(myhisto)
 
                 if switchToKDE:
                     medianVal = findMedianKDE(func)
                 else:
                     medianVal = findMedian(myhisto)
-                if switchToKDE: pval = pvalKDE
-                else: pval = getPValue(nObs, myhisto)
+                if switchToKDE:
+                    pval = pvalKDE
+                else:
+                    pval = getPValue(nObs, myhisto)
 
                 # the p-value cannot be one... And we have a limited number of toys
                 pvalmax = 1.-1./myhisto.GetEntries()
@@ -736,7 +743,7 @@ if __name__ == '__main__':
     hList, hOBSList, hEXPList, hNSList, pValHistList = [], [], [], [], []
 
     if len(frLabels) <= 1:
-        btagToDo = [23]  # THIS MEANS WE ARE INTEGRATING THE FULL BTAG REGION
+        btagToDo = [0]  # THIS MEANS WE ARE INTEGRATING THE FULL BTAG REGION, instead of 23
     if len(frLabels) == 3:
         btagToDo = [0, 1, 23]  # THIS MEANS WE ARE DOING EACH BTAG REGION
     if len(frLabels) == 2:

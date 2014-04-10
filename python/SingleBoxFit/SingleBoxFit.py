@@ -236,8 +236,6 @@ class SingleBoxAnalysis(Analysis.Analysis):
                 fit_range = boxes[box].fitregion
                 print 'Using the fit range: %s' % fit_range
 
-                #boxes[box].fixPars('Ntot_TTj1b',True)
-                #boxes[box].fixPars('Ntot_TTj2b',True)
                 if boxes[box].fitMode == '2D':
                     boxes[box].fixPars('n_TTj2b', True)
 

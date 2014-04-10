@@ -4,7 +4,6 @@ import ROOT as rt
 from array import *
 
 
-
 #this is global, to be reused in the plot making
 def getBinning(boxName, varName, btag):
     # if boxName in ["BJetHS", "BJetLS"]:
@@ -65,7 +64,7 @@ class RazorBox(Box.Box):
             self.fitregion = fitregion
         self.fitMode = fitMode
 
-        self.cut = 'MR>450. && Rsq>=0.1 && nBtag<1'
+        self.cut = 'MR>450. && Rsq>=0.1 && nBtag>0'
 
     def addTailPdf(self, flavour, doSYS):
         label = '_%s' % flavour
@@ -78,7 +77,6 @@ class RazorBox(Box.Box):
                 self.workspace.var("n%s" % label).setConstant(rt.kFALSE)
             else:
                 self.workspace.factory("RooRazor2DTail::RazPDF%s(MR,Rsq,MR0%s,R0%s,b%s)" % (label, label, label, label))
-                #self.workspace.factory("RooRazor2DTail_SYS::PDF%s(MR,Rsq,MR0%s,R0%s,b%s,n%s)" %(label,label,label,label,label))
                 #tail-systematic parameter fixed to 1.0
                 self.workspace.var("n%s" % label).setVal(1.0)
                 self.workspace.var("n%s" % label).setConstant(rt.kTRUE)
@@ -183,10 +181,6 @@ class RazorBox(Box.Box):
 
     def define(self, inputFile):
 
-        #define the ranges
-        # mR = self.workspace.var("MR")
-        # Rsq = self.workspace.var("Rsq")
-        # nBtag = self.workspace.var("nBtag")
         self.workspace.factory("expr::MRnorm('@0*(1/4000.)',MR)")
 
         # charge +1 pdf
@@ -200,30 +194,15 @@ class RazorBox(Box.Box):
             print z
             if self.name not in self.zeros[z]:
                 self.addTailPdf(z, not (z == "Vpj"))
-                #self.addTailPdf(z, True)
                 myPDFlist.add(self.workspace.pdf("ePDF_%s" % z))
-
-        # add ALL the different components (for combining boxes in limit setting later):
-        # - W+jets
-        # - ttbar+jets 1b
-        # - ttbar+jets j2b
-        #self.addTailPdf("Vpj",False)
-        #self.addTailPdf("TTj1b",True)
-        #if self.fitMode=='3D' or self.name!="Jet1b": self.addTailPdf("TTj2b",True)
-
-        # build the total PDF
-        #if self.fitMode=='3D': myPDFlist = rt.RooArgList(self.workspace.pdf("ePDF_Vpj"), self.workspace.pdf("ePDF_TTj1b"), self.workspace.pdf("ePDF_TTj2b"))
-        #elif self.fitMode=='2D' or self.name!="Jet1b": myPDFlist = rt.RooArgList(self.workspace.pdf("ePDF_Vpj"), self.workspace.pdf("ePDF_TTj1b"))
 
         model = rt.RooAddPdf(self.fitmodel, self.fitmodel, myPDFlist)
         model.Print('V')
 
         # import the model in the workspace.
         self.importToWS(model)
-        #print the workspace
         self.workspace.Print("v")
 
-        ##### THIS IS A SIMPLIFIED FIT
         # fix all pdf parameters (except the n) to the initial value
         self.fixPars("MR0_")
         self.fixPars("R0_")
@@ -280,9 +259,6 @@ class RazorBox(Box.Box):
                 self.workspace.var("f3_TTj1b").setVal(0.)
                 self.workspace.var("f3_TTj1b").setConstant(rt.kTRUE)
             if data2b.numEntries() == 0:
-                #this is now a function
-                #self.workspace.var("f2_TTj2b").setVal(0.)
-                #self.workspace.var("f2_TTj2b").setConstant(rt.kTRUE)
                 self.workspace.var("f2_Vpj").setVal(0.)
                 self.workspace.var("f2_Vpj").setConstant(rt.kTRUE)
                 self.workspace.var("f2_TTj1b").setVal(0.)

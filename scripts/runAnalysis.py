@@ -100,7 +100,7 @@ if __name__ == '__main__':
 
     from SingleBoxFit import SingleBoxFit
 
-    analysis = "INCLUSIVE"
+    analysis = "MULTIJET"
     if options.doBjet:
         analysis = "BJET"
     if options.doMultijet:
@@ -112,7 +112,7 @@ if __name__ == '__main__':
     print args
 
     if options.analysis is not None:
-        aa = [SingleBoxFit.SingleBoxAnalysis(options.output, cfg, analysis)]
+        aa = SingleBoxFit.SingleBoxAnalysis(options.output, cfg, analysis)
         if aa.name == options.analysis:
             aa.options = options
             print "Running analysis '%s'" % aa.name
