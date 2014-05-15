@@ -50,10 +50,8 @@ class RazorBox(Box.Box):
             self.btag = "Btag"
             self.njet = "Jet"
             self.zeros = {'TTj1b': ['Jet2b'],
-                          'TTj2b': ['MuEle', 'EleEle', 'MuMu', 'TauTauJet', 'Jet1b', 'BVetoHS'],
-                          'Vpj': ['MuEle', 'EleEle', 'MuMu', 'Mu', 'MuJet', 'MuMultiJet',
-                                  'EleJet', 'EleMultiJet', 'MuTau', 'EleTau', 'TauTauJet',
-                                  'MultiJet', 'Jet', 'Jet2b', 'Ele', 'BJetHS', 'BJetLS', 'BVetoHS']}
+                          'TTj2b': ['BVetoHS'],
+                          'Vpj': ['Mu', 'Ele', 'BJetLS', 'BVetoHS']}
 
         if fitregion == "Sideband":
             self.fitregion = "LowRsq,LowMR"
@@ -64,7 +62,7 @@ class RazorBox(Box.Box):
             self.fitregion = fitregion
         self.fitMode = fitMode
 
-        self.cut = 'MR>450. && Rsq>=0.1 && nBtag>0'
+        self.cut = 'MR>=450. && Rsq>=0.1 && nBtag>0'
 
     def addTailPdf(self, flavour, doSYS):
         label = '_%s' % flavour
@@ -856,8 +854,8 @@ class RazorBox(Box.Box):
         pt.SetTextSize(0.062)
         text = pt.AddText("CMS %s #sqrt{s} = %i TeV" % (Preliminary, int(Energy)))
         Lumi = 19.3
-        # text = pt.AddText("Razor %s Box #int L = %3.1f fb^{-1}" %(self.name, Lumi))
-        text = pt.AddText("Razor %s Box TTjets MC" % self.name)
+        text = pt.AddText("%s Box #int L = %3.1f fb^{-1}" %(self.name, Lumi))
+        # text = pt.AddText("Razor %s Box TTjets MC" % self.name)
 
         c = rt.TCanvas("c", "c", 500, 400)
         c.SetName('DataMC_%s_%s_ALLCOMPONENTS' % (varname, '_'.join(ranges)))
@@ -1048,7 +1046,8 @@ class RazorBox(Box.Box):
         elif self.fitregion == "LowRsq2b,LowMR2b,HighMR2b": fitLabel = "2b"
         elif self.fitregion == "LowRsq3b,LowMR3b,HighMR3b": fitLabel = "3b"
 
-        c.Print("razor_canvas_%s_%s_%s_%s.pdf" % (self.name, fitLabel, '_'.join(ranges), varname))
+        # c.Print("razor_canvas_%s_%s_%s_%s.pdf" % (self.name, fitLabel, '_'.join(ranges), varname))
+        c.Print("%s_%s_%s.pdf" % (varname, self.name, fitLabel))
 
         rt.gROOT.ProcessLine("delete gDirectory->FindObject(\"c\");")
         rt.gROOT.ProcessLine("delete gDirectory->FindObject(\"pad1\");")

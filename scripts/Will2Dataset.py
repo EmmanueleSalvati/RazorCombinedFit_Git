@@ -18,7 +18,7 @@ lumi = 1.0
 sys.path.append(os.path.join(os.environ['RAZORFIT_BASE'], 'macros/multijet'))
 from CalcBDT import CalcBDT
 
-MR_CUT_HAD = 450.
+MR_CUT_HAD = 400.
 MR_CUT_LEP = 350.
 RSQ_CUT = 0.08
 BDT_CUT = -0.2
@@ -301,4 +301,4 @@ if __name__ == '__main__':
         else:
             "File '%s' of unknown type. Looking for .root files only" % f
 
-    convertTree2Dataset(chain, fName, cfg, options.min, options.max, BVetoBoxHS(CalcBDT(chain)), options.run)
+    convertTree2Dataset(chain, fName, cfg, options.min, options.max, BJetBoxHS(CalcBDT(chain)), options.run)

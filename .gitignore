@@ -1,0 +1,27 @@
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+*.pdf
+toy_files/
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+*.pyc
+*/*.pyc
+*/*/*.pyc
+python/RootTools/*.pyc
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.out
+
