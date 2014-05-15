@@ -5,6 +5,7 @@
 *.obj
 *.pdf
 toy_files/
+.DS_Store
 
 # Compiled Dynamic libraries
 *.so
