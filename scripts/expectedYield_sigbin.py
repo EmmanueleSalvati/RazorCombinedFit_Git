@@ -5,7 +5,8 @@ import random
 from array import *
 # import makeBluePlot
 import os
-
+sys.path.append(os.path.join(os.environ['RAZORFIT_BASE'],\
+    'python/SingleBoxFit'))
 
 def getTree2D(MRbins, Rsqbins, listfileName):
     x = array("d",MRbins)

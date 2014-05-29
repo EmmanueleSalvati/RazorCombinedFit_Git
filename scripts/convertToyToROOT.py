@@ -5,7 +5,7 @@ import sys
 if __name__ == '__main__':
 
     MR = rt.RooRealVar("MR", "MR", 450., 4000.)
-    Rsq = rt.RooRealVar("Rsq", "Rsq", 0.08, 1.5)
+    Rsq = rt.RooRealVar("Rsq", "Rsq", 0.10, 1.5)
     nBtag = rt.RooRealVar("nBtag", "nBtag", 1.0, 5.0)
     dir = sys.argv[1]
 

@@ -6,6 +6,7 @@ import makeBluePlot
 #import plotStyle
 import makeToyPVALUE_sigbin
 import os
+sys.path.append(os.path.join(os.environ['RAZORFIT_BASE'], 'python/SingleBoxFit'))
 
 def FindLastBin(h):
     for i in range(1,h.GetXaxis().GetNbins()):
@@ -323,7 +324,7 @@ def goodPlot(varname, Box, outFolder, Label, Energy, Lumi, hMRTOTcopy, hMRTOT, h
     pad1.cd()
     rt.gPad.SetLogy()
 
-    from RazorBox import getBinning
+    # from RazorBox import getBinning
     MRbins    = getBinning(Box, "MR"   , "Btag")
     Rsqbins   = getBinning(Box, "Rsq"  , "Btag")
     nBtagbins = getBinning(Box, "nBtag", "Btag")
@@ -400,34 +401,34 @@ def goodPlot(varname, Box, outFolder, Label, Energy, Lumi, hMRTOTcopy, hMRTOT, h
     if showVpj:
         hMRVpj.SetFillStyle(0)
         col1 = rt.gROOT.GetColor(rt.kGreen-7)
-        col1.SetAlpha(1.0)
+        # col1.SetAlpha(1.0)
         hMRVpj.SetLineColor(rt.kGreen-3)
         hMRVpj.SetLineWidth(2)
         if varname == "BTAG":
             hMRVpj.Add(hMRTTj1b)
-            col1.SetAlpha(1.0)
+            # col1.SetAlpha(1.0)
             hMRVpj.SetFillStyle(1001)
             hMRVpj.SetFillColor(rt.kGreen-7)
         hMRVpj.Draw("histsame")
     if showTTj2b:
         hMRTTj2b.SetFillStyle(0)
         col1 = rt.gROOT.GetColor(rt.kRed-4)
-        col1.SetAlpha(1.0)
+        # col1.SetAlpha(1.0)
         hMRTTj2b.SetLineColor(rt.kRed)
         hMRTTj2b.SetLineWidth(2)
         if varname == "BTAG":
-            col1.SetAlpha(1.0)
+            # col1.SetAlpha(1.0)
             hMRTTj2b.SetFillStyle(1001)
             hMRTTj2b.SetFillColor(rt.kRed-4)
         hMRTTj2b.Draw("histsame")
     if showTTj1b:
         hMRTTj1b.SetFillStyle(0)
         col2 = rt.gROOT.GetColor(rt.kViolet-4)
-        col2.SetAlpha(1.0)
+        # col2.SetAlpha(1.0)
         hMRTTj1b.SetLineColor(rt.kViolet)
         hMRTTj1b.SetLineWidth(2)
         if varname == "BTAG":
-            col2.SetAlpha(1.0)
+            # col2.SetAlpha(1.0)
             hMRTTj1b.SetFillStyle(1001)
             hMRTTj1b.SetFillColor(rt.kViolet-4)
         hMRTTj1b.Draw("histsame")
@@ -446,7 +447,7 @@ def goodPlot(varname, Box, outFolder, Label, Energy, Lumi, hMRTOTcopy, hMRTOT, h
 
     if showSignal:
         c4 = rt.gROOT.GetColor(rt.kGray+2)
-        c4.SetAlpha(1.0)
+        # c4.SetAlpha(1.0)
         hMRSignal.SetLineColor(rt.kBlack)
         hMRSignal.SetFillColor(rt.kGray+2)
         hMRSignal.SetLineStyle(2)
@@ -652,7 +653,8 @@ if __name__ == '__main__':
         if sys.argv[i] == "--printPlots": printPlots = True
         if sys.argv[i].find("--fit-region=") != -1:
             frLabelString = sys.argv[i].replace("--fit-region=","")
-            frLabels = frLabelString.split(",")
+            # frLabels = frLabelString.split(",")
+            frLabels = [frLabelString,]
         if sys.argv[i].find("-MC=") != -1:
             Preliminary = "Simulation"
             datasetName = sys.argv[i].replace("-MC=","")
@@ -665,6 +667,10 @@ if __name__ == '__main__':
     MRbins    = getBinning(Box, "MR"   , "Btag")
     Rsqbins   = getBinning(Box, "Rsq"  , "Btag")
     nBtagbins = getBinning(Box, "nBtag", "Btag")
+    print MRbins
+    print Rsqbins
+    print nBtagbins
+
 
     x = array("d",MRbins)
     y = array("d",Rsqbins)
@@ -679,7 +685,9 @@ if __name__ == '__main__':
     print fitfileName
 
     if frLabels == []: frLabels = ["FULL"]
-    #if fit3D: frLabels.extend(["%ib"%btag for btag in nBtagbins[:-1]])
+    # if fit3D: frLabels.extend(["%ib"%btag for btag in nBtagbins[:-1]])
+
+    print 'This is fucking label:', frLabels
 
     if len(frLabels)<=1:
         btagToDo = [0] # THIS MEANS WE ARE INTEGRATING THE FULL BTAG REGION
@@ -687,6 +695,8 @@ if __name__ == '__main__':
         btagToDo = [0,1,23] # THIS MEANS WE ARE DOING EACH BTAG REGION
     if len(frLabels)==4:
         btagToDo = [0,1,2,3] # THIS MEANS WE ARE DOING EACH BTAG REGION
+
+    btagToDo = [0]
 
     # TTj1b histograms
     hMRTTj1bList = [fitFile.Get("%s/histoToyTTj1b_MR_%s_ALLCOMPONENTS" %(Box,frLabel)) for frLabel in frLabels]
@@ -725,7 +735,11 @@ if __name__ == '__main__':
     if True:#fit3D:
         hBTAGSignalList = [fitFile.Get("%s/histoToySignal_nBtag_%s_ALLCOMPONENTS" %(Box,frLabel)) for frLabel in frLabels]
 
+    print 'L muort d mammt', hMRTOTList[0]
+
     for hMRTOT, hMRTTj1b, hMRTTj2b, hMRVpj, hMRData, hMRSignal, hRSQTOT, hRSQTTj1b, hRSQTTj2b, hRSQVpj, hRSQData, hRSQSignal, hBTAGTOT, hBTAGTTj1b, hBTAGTTj2b, hBTAGVpj, hBTAGData, hBTAGSignal, btagOpt, frLabel in zip(hMRTOTList, hMRTTj1bList, hMRTTj2bList, hMRVpjList, hMRDataList,  hMRSignalList, hRSQTOTList, hRSQTTj1bList, hRSQTTj2bList, hRSQVpjList, hRSQDataList, hRSQSignalList,  hBTAGTOTList, hBTAGTTj1bList, hBTAGTTj2bList, hBTAGVpjList, hBTAGDataList, hBTAGSignalList, btagToDo, frLabels):
+
+        print hMRTOT.Print()
 
         errMR = GetErrorsX(len(MRbins),len(Rsqbins),myTree,printPlots,outFolder,fit3D,btagOpt, frLabel)
         errRSQ = GetErrorsY(len(MRbins),len(Rsqbins),myTree,printPlots,outFolder,fit3D,btagOpt, frLabel)

@@ -1,10 +1,8 @@
-# from optparse import OptionParser
 import ROOT as rt
-# import RootTools
-# import RazorCombinedFit
-from array import *
+from array import array
 import sys
-# import makeBluePlot
+import os
+sys.path.append(os.path.join(os.environ['RAZORFIT_BASE'], 'python/SingleBoxFit'))
 
 
 def set2DStyle(h):
@@ -562,11 +560,11 @@ def writeFilesDrawHistos(MRbins, Rsqbins, h, hOBS, hEXP, hNS, pValHist, Box, out
 
 
     if dataFileName.find("Sideband")!=-1:
-        yLines.append(rt.TLine(x[2], y[1], x[2], y[-1]))
+        yLines.append(rt.TLine(x[1], y[1], x[1], y[-1]))
         yLines[-1].SetLineStyle(2)
         yLines[-1].SetLineWidth(2)
         yLines[-1].SetLineColor(rt.kGreen)
-        xLines.append(rt.TLine(x[2], y[1], x[-1], y[1]))
+        xLines.append(rt.TLine(x[1], y[1], x[-1], y[1]))
         xLines[-1].SetLineStyle(2)
         xLines[-1].SetLineWidth(2)
         xLines[-1].SetLineColor(rt.kGreen)
@@ -622,7 +620,7 @@ def writeFilesDrawHistos(MRbins, Rsqbins, h, hOBS, hEXP, hNS, pValHist, Box, out
     fGrayGraphs = []
     tlatexList = []
     col1 = rt.gROOT.GetColor(rt.kGray+1)
-    col1.SetAlpha(0.3)
+    # col1.SetAlpha(0.3)
     for iBinX in range(1,hNS.GetNbinsX()+1):
         for iBinY in range(1,hNS.GetNbinsY()+1):
             if hNS.GetBinContent(iBinX,iBinY)!= -999: continue
@@ -739,6 +737,9 @@ if __name__ == '__main__':
     MRbins = getBinning(Box, "MR", "Btag")
     Rsqbins = getBinning(Box, "Rsq", "Btag")
     nBtagbins = getBinning(Box, "nBtag", "Btag")
+    print MRbins
+    print Rsqbins
+    print nBtagbins
 
     hList, hOBSList, hEXPList, hNSList, pValHistList = [], [], [], [], []
 

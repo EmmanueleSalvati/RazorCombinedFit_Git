@@ -4,8 +4,13 @@
 *.o
 *.obj
 *.pdf
-toy_files/
+toys_files*
 .DS_Store
+fit_results/With_duplicates_bug/
+submit/
+Datasets/With_duplicates_bug
+src/rootdict.*
+fitmodel_graphViz.*
 
 # Compiled Dynamic libraries
 *.so

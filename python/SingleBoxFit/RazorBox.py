@@ -7,16 +7,12 @@ from array import *
 #this is global, to be reused in the plot making
 def getBinning(boxName, varName, btag):
     # if boxName in ["BJetHS", "BJetLS"]:
-    if boxName in ["BJet"]:
-        if varName == "MR":
-            return [500, 700, 900, 1200, 1600, 2500, 4000]
-        elif varName == "Rsq":
-            return [0.1, 0.2, 0.30, 0.41, 0.52, 0.64, 0.80, 1.5]
-    else:
-        if varName == "MR":
-            return [450, 550, 700, 900, 1200, 1600, 2500, 4000]
-        elif varName == "Rsq":
-            return [0.1, 0.20, 0.30, 0.41, 0.52, 0.64, 0.80, 1.5]
+    if varName == "MR":
+        return [450, 600, 750, 900, 1200, 1600, 4000]
+        # return [450, 550, 700, 900, 1200, 1600, 2500, 4000]
+    elif varName == "Rsq":
+        return [0.10, 0.13, 0.20, 0.30, 0.41, 0.52, 0.64, 1.5]
+        # return [0.10, 0.13, 0.20, 0.30, 0.41, 0.52, 0.64, 0.80, 1.5]
 
     if varName == "nBtag":
         if btag == "NoBtag":
@@ -51,7 +47,7 @@ class RazorBox(Box.Box):
             self.njet = "Jet"
             self.zeros = {'TTj1b': ['Jet2b'],
                           'TTj2b': ['BVetoHS'],
-                          'Vpj': ['Mu', 'Ele', 'BJetLS', 'BVetoHS']}
+                          'Vpj': ['Mu', 'Ele', 'BVetoHS']}
 
         if fitregion == "Sideband":
             self.fitregion = "LowRsq,LowMR"
@@ -62,7 +58,7 @@ class RazorBox(Box.Box):
             self.fitregion = fitregion
         self.fitMode = fitMode
 
-        self.cut = 'MR>=450. && Rsq>=0.1 && nBtag>0'
+        self.cut = 'MR>=450. && Rsq>=0.10 && nBtag>0'
 
     def addTailPdf(self, flavour, doSYS):
         label = '_%s' % flavour
@@ -924,33 +920,33 @@ class RazorBox(Box.Box):
             histoToyVpjAdd = histoToyVpj.Clone("histoToyVpjAdd")
             histoToyVpjAdd.DrawCopy("histsame")
             c1 = rt.gROOT.GetColor(rt.kGreen-4)
-            c1.SetAlpha(1.0)
+            # c1.SetAlpha(1.0)
             histoToyVpjAdd.SetFillStyle(0)
             if varname == "nBtag":
                 histoToyVpjAdd.Add(histoToyTTj1b)
                 histoToyVpjAdd.SetFillStyle(1001)
-                c1.SetAlpha(1.0)
+                # c1.SetAlpha(1.0)
                 histoToyVpj.SetFillColor(rt.kGreen-4)
                 histoToyVpjAdd.SetFillColor(rt.kGreen-4)
             histoToyVpjAdd.DrawCopy('histsame')
         if self.workspace.var("Ntot_TTj1b").getVal():
             histoToyTTj1b.DrawCopy("histsame")
             c2 = rt.gROOT.GetColor(rt.kViolet-4)
-            c2.SetAlpha(1.0)
+            # c2.SetAlpha(1.0)
             histoToyTTj1b.SetFillStyle(0)
             if varname == "nBtag":
                 histoToyTTj1b.SetFillStyle(1001)
-                c2.SetAlpha(1.0)
+                # c2.SetAlpha(1.0)
                 histoToyTTj1b.SetFillColor(rt.kViolet-4)
             histoToyTTj1b.DrawCopy('histsame')
         if self.workspace.var("Ntot_TTj2b").getVal():
             histoToyTTj2b.DrawCopy('histsame')
             c3 = rt.gROOT.GetColor(rt.kRed-4)
-            c3.SetAlpha(1.0)
+            # c3.SetAlpha(1.0)
             histoToyTTj2b.SetFillStyle(0)
             if varname == "nBtag":
                 histoToyTTj2b.SetFillStyle(1001)
-                c3.SetAlpha(1.0)
+                # c3.SetAlpha(1.0)
                 histoToyTTj2b.SetFillColor(rt.kRed-4)
             histoToyTTj2b.DrawCopy('histsame')
         # total
@@ -965,7 +961,7 @@ class RazorBox(Box.Box):
 
         if N_Signal > 0:
             c4 = rt.gROOT.GetColor(rt.kGray+2)
-            c4.SetAlpha(1.0)
+            # c4.SetAlpha(1.0)
             histoToySignal.SetLineColor(rt.kBlack)
             histoToySignal.SetFillColor(rt.kGray+2)
             histoToySignal.SetLineStyle(2)
@@ -1398,7 +1394,7 @@ class RazorBox(Box.Box):
             xLines[-1].SetLineWidth(2)
             xLines[-1].SetLineColor(predColor)
             col2 = rt.gROOT.GetColor(predColor-10)
-            col2.SetAlpha(0.5)
+            # col2.SetAlpha(0.5)
 
             fGreen = rt.TGraph(5)
             fGreen.SetPoint(0,x[0],y[1])
@@ -1425,7 +1421,7 @@ class RazorBox(Box.Box):
             xLines[-1].SetLineWidth(2)
             xLines[-1].SetLineColor(predColor)
             col2 = rt.gROOT.GetColor(predColor-10)
-            col2.SetAlpha(0.5)
+            # col2.SetAlpha(0.5)
 
             fGreen = rt.TGraph(5)
             fGreen.SetPoint(0,x[1],y[0])
@@ -1442,7 +1438,7 @@ class RazorBox(Box.Box):
             yLines[-1].SetLineWidth(2)
             yLines[-1].SetLineColor(predColor)
             col2 = rt.gROOT.GetColor(predColor-10)
-            col2.SetAlpha(0.5)
+            # col2.SetAlpha(0.5)
 
             fGreen = rt.TGraph(5)
             fGreen.SetPoint(0,x[0],y[1])
@@ -1455,7 +1451,7 @@ class RazorBox(Box.Box):
         elif fitLabel=="FULL":
             predColor = rt.kBlue
             col2 = rt.gROOT.GetColor(predColor-10)
-            col2.SetAlpha(0.5)
+            # col2.SetAlpha(0.5)
 
             fGreen = rt.TGraph(5)
             fGreen.SetPoint(0,x[0],y[1])
