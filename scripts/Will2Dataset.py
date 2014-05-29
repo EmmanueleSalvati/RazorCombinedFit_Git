@@ -32,9 +32,10 @@ class BJetBoxLS(object):
 
     def __call__(self, tree):
         return tree.hadBoxFilter and tree.nJet >= 6 and tree.hadTriggerFilter\
-            and tree.nCSVM > 0 and tree.MR >= MR_CUT_HAD and tree.RSQ >= RSQ_CUT and\
-            tree.nMuonTight == 0 and tree.nElectronTight == 0 and not tree.isolatedTrack10Filter and\
-            tree.nMuonLoose == 0 and tree.nElectronLoose == 0 and self.dumper.bdt() < BDT_CUT
+            and tree.nCSVM > 0 and tree.MR >= MR_CUT_HAD and tree.RSQ >= RSQ_CUT\
+            and tree.nMuonTight == 0 and tree.nElectronTight == 0 and\
+            not tree.isolatedTrack10Filter and tree.nMuonLoose == 0 and\
+            tree.nElectronLoose == 0 and self.dumper.bdt() < BDT_CUT
 
 
 class BJetBox(object):
@@ -57,10 +58,11 @@ class BJetBoxHS(object):
         self.dumper = dumper
 
     def __call__(self, tree):
-        return tree.hadBoxFilter and tree.nJet >= 6 and tree.hadTriggerFilter and\
-            tree.nCSVM > 0 and tree.MR >= MR_CUT_HAD and tree.RSQ >= RSQ_CUT and\
-            tree.nMuonTight == 0 and tree.nElectronTight == 0 and not tree.isolatedTrack10Filter and\
-            tree.nMuonLoose == 0 and tree.nElectronLoose == 0 and self.dumper.bdt() >= BDT_CUT
+        return tree.hadBoxFilter and tree.nJet >= 6 and tree.hadTriggerFilter\
+        and tree.nCSVM > 0 and tree.MR >= MR_CUT_HAD and tree.RSQ >= RSQ_CUT\
+        and tree.nMuonTight == 0 and tree.nElectronTight == 0 and\
+        not tree.isolatedTrack10Filter and tree.nMuonLoose == 0 and\
+        tree.nElectronLoose == 0 and self.dumper.bdt() >= BDT_CUT
 
 
 class BVetoBoxHS(object):
@@ -116,7 +118,7 @@ class SelectBox(object):
 
 
 def writeTree2DataSet(data, outputFile, outputBox, rMin, mRmin):
-    output = rt.TFile.Open(outputFile+"_MR"+str(mRmin)+"_R"+str(rMin)+'_BTAG_'+outputBox, 'RECREATE')
+    output = rt.TFile.Open(outputFile+"_MR"+str(mRmin)[:4]+"_R"+str(rMin)[:4]+'_BTAG_'+outputBox, 'RECREATE')
     print 'writing dataset to ', output.GetName()
     for d in data:
         d.Write()
@@ -141,13 +143,16 @@ def convertTree2Dataset(tree, outputFile, config, min, max, filter, run, write=T
     box = filter.name
     workspace = rt.RooWorkspace(box)
     variables = config.getVariablesRange(box, "variables", workspace)
-    workspace.factory('W[0,0,+INF]')
+    # workspace.factory('W[0,0,+INF]')
     workspace.factory('nJet[4,0,15]')
     workspace.factory('met[200.,0.,700.]')
+    workspace.factory('run[1000,0,+INF]')
+    workspace.factory('lumi[0,0,+INF]')
+    workspace.factory('event[100,0,+INF]')
 
-    if filter.dumper is not None:
-        for h in filter.dumper.sel.headers_for_MVA():
-            workspace.factory('%s[0,-INF,+INF]' % h)
+    # if filter.dumper is not None:
+    #     for h in filter.dumper.sel.headers_for_MVA():
+    #         workspace.factory('%s[0,-INF,+INF]' % h)
 
     args = workspace.allVars()
     args.Print()
@@ -220,6 +225,11 @@ def convertTree2Dataset(tree, outputFile, config, min, max, filter, run, write=T
 
         a.setRealValue('MR', tree.MR)
         a.setRealValue('Rsq', tree.RSQ)
+
+        a.setRealValue('run', tree.run)
+        a.setRealValue('lumi', tree.lumi)
+        a.setRealValue('event', tree.event)
+
         btagcutoff = 3
         if tree.nCSVM >= btagcutoff:
             a.setRealValue('nBtag', btagcutoff)
@@ -229,9 +239,9 @@ def convertTree2Dataset(tree, outputFile, config, min, max, filter, run, write=T
         a.setRealValue('nLepton', tree.nMuonLoose + tree.nElectronLoose + tree.nTauLoose)
         a.setRealValue('W', 1.0)
 
-        if filter.dumper is not None:
-            for h in filter.dumper.sel.headers_for_MVA():
-                a.setRealValue(h, getattr(filter.dumper.sel, h)())
+        # if filter.dumper is not None:
+        #     for h in filter.dumper.sel.headers_for_MVA():
+        #         a.setRealValue(h, getattr(filter.dumper.sel, h)())
 
         data.add(a)
 
@@ -301,4 +311,4 @@ if __name__ == '__main__':
         else:
             "File '%s' of unknown type. Looking for .root files only" % f
 
-    convertTree2Dataset(chain, fName, cfg, options.min, options.max, BJetBoxHS(CalcBDT(chain)), options.run)
+    convertTree2Dataset(chain, fName, cfg, options.min, options.max, BJetBoxLS(CalcBDT(chain)), options.run)
