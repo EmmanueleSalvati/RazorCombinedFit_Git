@@ -6,6 +6,7 @@
 *.pdf
 toys_files*
 .DS_Store
+*/.DS_Store
 fit_results/With_duplicates_bug/
 submit/
 Datasets/With_duplicates_bug
