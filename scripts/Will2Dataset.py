@@ -311,4 +311,4 @@ if __name__ == '__main__':
         else:
             "File '%s' of unknown type. Looking for .root files only" % f
 
-    convertTree2Dataset(chain, fName, cfg, options.min, options.max, BJetBoxLS(CalcBDT(chain)), options.run)
+    convertTree2Dataset(chain, fName, cfg, options.min, options.max, BJetBoxHS(CalcBDT(chain)), options.run)

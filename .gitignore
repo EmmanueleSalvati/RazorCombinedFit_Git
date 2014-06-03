@@ -12,6 +12,7 @@ submit/
 Datasets/With_duplicates_bug
 src/rootdict.*
 fitmodel_graphViz.*
+T3
 
 # Compiled Dynamic libraries
 *.so

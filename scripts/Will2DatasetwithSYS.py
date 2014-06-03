@@ -18,23 +18,55 @@ lumi = 1.0
 sys.path.append(os.path.join(os.environ['RAZORFIT_BASE'],'macros/multijet'))
 from CalcBDT import CalcBDT
 
+MR_CUT_HAD = 400.
+MR_CUT_LEP = 350.
+RSQ_CUT = 0.08
+BDT_CUT = -0.2
+
+# class BJetBoxLS(object):
+#     """The BJet search box used in the analysis"""
+#     def __init__(self, dumper):
+#         self.name = 'BJetLS'
+#         self.dumper = dumper
+#     def __call__(self, tree):
+#         return tree.nJet >= 6 and tree.metFilter and tree.hadBoxFilter and tree.hadTriggerFilter and tree.nCSVM > 0 and tree.MR >= 350 and tree.RSQ >= 0.03 and\
+#             tree.nMuonTight == 0 and tree.nElectronTight == 0 and not tree.isolatedTrack10Filter and tree.nMuonLoose == 0 and tree.nElectronLoose == 0 and self.dumper.bdt() < -0.1 
+
 class BJetBoxLS(object):
     """The BJet search box used in the analysis"""
     def __init__(self, dumper):
         self.name = 'BJetLS'
         self.dumper = dumper
+
     def __call__(self, tree):
-        return tree.nJet >= 6 and tree.metFilter and tree.hadBoxFilter and tree.hadTriggerFilter and tree.nCSVM > 0 and tree.MR >= 350 and tree.RSQ >= 0.03 and\
-            tree.nMuonTight == 0 and tree.nElectronTight == 0 and not tree.isolatedTrack10Filter and tree.nMuonLoose == 0 and tree.nElectronLoose == 0 and self.dumper.bdt() < -0.1 
+        return tree.hadBoxFilter and tree.nJet >= 6 and tree.hadTriggerFilter\
+        and tree.nCSVM > 0 and tree.MR >= MR_CUT_HAD and tree.RSQ >= RSQ_CUT\
+        and tree.nMuonTight == 0 and tree.nElectronTight == 0 and\
+        not tree.isolatedTrack10Filter and tree.nMuonLoose == 0 and\
+        tree.nElectronLoose == 0 and self.dumper.bdt() < BDT_CUT
+
+
+# class BJetBoxHS(object):
+#     """The BJet search box used in the analysis"""
+#     def __init__(self, dumper):
+#         self.name = 'BJetHS'
+#         self.dumper = dumper
+#     def __call__(self, tree):
+#         return tree.nJet >= 6 and tree.metFilter and tree.hadBoxFilter and tree.hadTriggerFilter and tree.nCSVM > 0 and tree.MR >= 350 and tree.RSQ >= 0.03 and\
+#             tree.nMuonTight == 0 and tree.nElectronTight == 0 and not tree.isolatedTrack10Filter and tree.nMuonLoose == 0 and tree.nElectronLoose == 0 and self.dumper.bdt() >= -0.1 
 
 class BJetBoxHS(object):
     """The BJet search box used in the analysis"""
     def __init__(self, dumper):
         self.name = 'BJetHS'
         self.dumper = dumper
+
     def __call__(self, tree):
-        return tree.nJet >= 6 and tree.metFilter and tree.hadBoxFilter and tree.hadTriggerFilter and tree.nCSVM > 0 and tree.MR >= 350 and tree.RSQ >= 0.03 and\
-            tree.nMuonTight == 0 and tree.nElectronTight == 0 and not tree.isolatedTrack10Filter and tree.nMuonLoose == 0 and tree.nElectronLoose == 0 and self.dumper.bdt() >= -0.1 
+        return tree.hadBoxFilter and tree.nJet >= 6 and tree.hadTriggerFilter\
+        and tree.nCSVM > 0 and tree.MR >= MR_CUT_HAD and tree.RSQ >= RSQ_CUT\
+        and tree.nMuonTight == 0 and tree.nElectronTight == 0 and\
+        not tree.isolatedTrack10Filter and tree.nMuonLoose == 0 and\
+        tree.nElectronLoose == 0 and self.dumper.bdt() >= BDT_CUT
 
 class CR6JBVetoBoxLS(object):
     """The CR6JBVeto search box used in the analysis"""
@@ -153,7 +185,7 @@ def findBTagWeight(jets, mcdir = 0, doLight = False, datadir = 0):
 
     if w_data > 1: w_data = 1.
     if w_mc > 1: w_mc = 0.0
-            
+
     try:
         tag_weight = (1-w_data)/(1-w_mc)
     except ZeroDivisionError:
@@ -208,10 +240,10 @@ def writeTree2DataSet(data, outputFile, outputBox, rMin, mRmin, mstop, mlsp):
 
 def convertTree2Dataset(tree, outputFile, config, Min, Max, filter, run, mstop, mlsp, write = True):
     """This defines the format of the RooDataSet"""
-    
+
     box = filter.name
     workspace = rt.RooWorkspace(box)
-    variables = config.getVariablesRange(box,"variables",workspace)
+    variables = config.getVariablesRange(box, "variables", workspace)
     #
     workspace.factory('Run[0,0,+INF]')
     workspace.factory('Lumi[0,0,+INF]')
@@ -227,14 +259,13 @@ def convertTree2Dataset(tree, outputFile, config, Min, Max, filter, run, mstop, 
     workspace.factory('BDT[0,-INF,+INF]')
     workspace.factory('genInfo[0,-INF,+INF]')
 
-    
     if filter.dumper is not None:
         for h in filter.dumper.sel.headers_for_MVA():
             workspace.factory('%s[0,-INF,+INF]' % h)
-    
+
     args = workspace.allVars()
     data = rt.RooDataSet('RMRTree','Selected R and MR',args)
-    
+
     #we cut away events outside our MR window
     mRmin = args['MR'].getMin()
     mRmax = args['MR'].getMax()
@@ -248,7 +279,7 @@ def convertTree2Dataset(tree, outputFile, config, Min, Max, filter, run, mstop, 
     nLooseElectrons = rt.TH2D('nLooseElectrons','nLooseElectrons',350,mRmin,mRmax,100,rsqMin,rsqMax)
     nLooseMuons = rt.TH2D('nLooseMuons','nLooseMuons',350,mRmin,mRmax,100,rsqMin,rsqMax)
     nLooseTaus = rt.TH2D('nLooseTaus','nLooseTaus',350,mRmin,mRmax,100,rsqMin,rsqMax)
-    
+
     events = {}
 
 
@@ -296,7 +327,7 @@ def convertTree2Dataset(tree, outputFile, config, Min, Max, filter, run, mstop, 
                     binedgexLIST.append(R2edge)
                     R2edge = R2edge + binwR2
                 binedgeyLIST.append(rsqMax)
-            else: 
+            else:
                #use fixed binning 
                 binedgeyLIST = [rsqMin,0.18,0.2,0.3,0.4,0.5]
     else:
@@ -307,7 +338,7 @@ def convertTree2Dataset(tree, outputFile, config, Min, Max, filter, run, mstop, 
         binedgeyLIST.extend(binning[1])
 
     nbinx =  len(binedgexLIST)-1
-    nbiny = len(binedgeyLIST)-1    
+    nbiny = len(binedgeyLIST)-1
 
     print binedgexLIST
     print binedgeyLIST
@@ -338,28 +369,30 @@ def convertTree2Dataset(tree, outputFile, config, Min, Max, filter, run, mstop, 
         wHisto_pdfNNPDF = rt.TH2D("wHisto_pdfNNPDF_%s" % innpdf, "wHisto_pdfNNPDF_%s" % innpdf, \
                                  nbinx, binedgex, nbiny, binedgey)
         vwHisto_pdfNNPDF.append(wHisto_pdfNNPDF)
-        
+
     print 'x', len(vwHisto_pdfCTEQ)
 
 
-    # Load the file with the SMS number of total events per each point 
-    norms = pickle.load(file('/afs/cern.ch/user/w/wreece/public/Razor2012/SMS-T2tt_FineBin_Mstop-225to1200_mLSP-0to1000_8TeV-Pythia6Z-Summer12-START52_V9_FSIM-v1-PAT_CMG_V5_6_0_B.pkl'))
+    # Load the file with the SMS number of total events per each point
+    # norms = pickle.load(file('/afs/cern.ch/user/w/wreece/public/Razor2012/SMS-T2tt_FineBin_Mstop-225to1200_mLSP-0to1000_8TeV-Pythia6Z-Summer12-START52_V9_FSIM-v1-PAT_CMG_V5_6_0_B.pkl'))
+    norms = pickle.load(file(("/home/uscms208/cms/RazorCombinedFit_Git/"
+                        "T3/SusyTrees/T2tt/SMS-T2tt_mStop-Combo.0_8TeV-Pythia6Z-"
+                        "Summer12-START52_V9_FSIM-v1-SUSY.pkl")))
 
     print 'Number of entries:', tree.GetEntries()
 
     for entry in xrange(tree.GetEntries()):
         tree.GetEntry(entry)
 
-        if (entry % 50000 ==  0): print entry
+        if entry % 50000 == 0:
+            print entry
 
-#        if entry > 2000:
-#            break
+        # if entry > 2000:
+        #     break
 
-
-
-        if (mstop != tree.mStop or mlsp != tree.mLSP):
+        if mstop != tree.mStop or mlsp != tree.mLSP:
             continue
-        #print tree.mStop, tree.mLSP
+        print tree.mStop, tree.mLSP
 
         # Get the original event weight, which is 1/nevts for a given process
         point = (tree.mStop, tree.mLSP)
@@ -367,27 +400,27 @@ def convertTree2Dataset(tree, outputFile, config, Min, Max, filter, run, mstop, 
 
         #print tree.mStop, tree.mLSP, mstop, mlsp
 
-                
         ####First, apply a common selection
-        
+
         #take only events in the MR and R2 region
         if tree.MR > mRmax or tree.MR < mRmin or tree.RSQ < rsqMin or tree.RSQ > rsqMax:
             continue
 
         #apply the box based filter class
-        if not filter(tree): continue
+        if not filter(tree):
+            continue
         bdt = -9999.
         if filter.dumper is not None:
             bdt = filter.dumper.bdt()
-        
+
         #veto events with multiple loose leptons
         nLeptonLoose = tree.nMuonLoose + tree.nElectronLoose + tree.nTauLoose
         if nLeptonLoose > 1: continue
-        
+
         if tree.nElectronLoose > 0: nLooseElectrons.Fill(tree.MR,tree.RSQ)
         if tree.nMuonLoose > 0: nLooseMuons.Fill(tree.MR,tree.RSQ)
         if tree.nTauLoose > 0: nLooseTaus.Fill(tree.MR,tree.RSQ)
-        
+
         try:
             if tree.run <= run:
                 continue
@@ -400,17 +433,17 @@ def convertTree2Dataset(tree, outputFile, config, Min, Max, filter, run, mstop, 
 
         #set the RooArgSet and save
         a = rt.RooArgSet(args)
-        
+
         a.setRealValue('Run',tree.run)
         a.setRealValue('Lumi',tree.lumi)
         a.setRealValue('Event',tree.event)
         e = (tree.run,tree.lumi,tree.event)
-        
+
         #filter out duplicate events in case there are any
         if e in events:
             continue
         events[e] = None
-        
+
         a.setRealValue('MR',tree.MR, True)
         a.setRealValue('Rsq',tree.RSQ, True)
         a.setRealValue('nBtag',nBtag)
@@ -422,14 +455,12 @@ def convertTree2Dataset(tree, outputFile, config, Min, Max, filter, run, mstop, 
         a.setRealValue('nVertex',tree.nVertex)
         a.setRealValue('W',1.0)
         a.setRealValue('BDT',bdt)
-        
         a.setRealValue('genInfo',tree.genInfo)
 
-        
         if filter.dumper is not None:
             for h in filter.dumper.sel.headers_for_MVA():
                 a.setRealValue(h,getattr(filter.dumper.sel,h)())
-        
+
         data.add(a)
 
 
@@ -504,7 +535,7 @@ def convertTree2Dataset(tree, outputFile, config, Min, Max, filter, run, mstop, 
 
         print 'weight', weight
 
-        
+
         wHisto.Fill(MR, RSQ, weight*btw_nominal)
         wHisto_JESup.Fill(tree.MR_JES_UP, tree.RSQ_JES_DOWN, weight*btw_nominal)
         wHisto_JESdown.Fill(tree.MR_JES_DOWN, tree.RSQ_JES_DOWN, weight*btw_nominal)
@@ -521,7 +552,7 @@ def convertTree2Dataset(tree, outputFile, config, Min, Max, filter, run, mstop, 
         for icteq in range(45):
             vwHisto_pdfCTEQ[icteq].Fill(MR, RSQ, weight*btw_nominal*CTEQ66_W[icteq])
         for innpdf in range(101):
-            vwHisto_pdfNNPDF[innpdf].Fill(MR, RSQ, weight*btw_nominal*NNPDF_W[innpdf])        
+            vwHisto_pdfNNPDF[innpdf].Fill(MR, RSQ, weight*btw_nominal*NNPDF_W[innpdf])
 
         #print entry
 
@@ -560,7 +591,7 @@ def convertTree2Dataset(tree, outputFile, config, Min, Max, filter, run, mstop, 
 
     wHisto_JESup_pe = rt.TH2D("wHisto_JESup_pe", "wHisto_JESup_pe", nbinx, binedgex, nbiny, binedgey)
     wHisto_JESdown_pe = rt.TH2D("wHisto_JESdown_pe", "wHisto_JESdown_pe", nbinx, binedgex, nbiny, binedgey)
-    wHisto_JESerr_pe = rt.TH2D("wHisto_JESerr_pe", "wHisto_JESerr_pe", nbinx, binedgex, nbiny, binedgey)    
+    wHisto_JESerr_pe = rt.TH2D("wHisto_JESerr_pe", "wHisto_JESerr_pe", nbinx, binedgex, nbiny, binedgey)
     wHisto_pdferr_pe = rt.TH2D("wHisto_pdferr_pe", "wHisto_pdferr_pe", nbinx, binedgex, nbiny, binedgey)
     wHisto_btagup_pe = rt.TH2D("wHisto_btagup_pe", "wHisto_btagup_pe", nbinx, binedgex, nbiny, binedgey)
     wHisto_btagdown_pe = rt.TH2D("wHisto_btagdown_pe", "wHisto_btagdown_pe", nbinx, binedgex, nbiny, binedgey)
@@ -579,25 +610,25 @@ def convertTree2Dataset(tree, outputFile, config, Min, Max, filter, run, mstop, 
             if nominal == 0:
                 JESup_pe = 0
                 wHisto_JESup_pe.SetBinContent(i, j, JESup_pe)
-                
+
                 JESdown_pe = 0
                 wHisto_JESdown_pe.SetBinContent(i, j, JESdown_pe)
 
                 JESerr_pe = 0
                 wHisto_JESerr_pe.SetBinContent(i, j, JESerr_pe)
-                
+
                 pdferr_pe = 0
                 wHisto_pdferr_pe.SetBinContent(i, j, pdferr)
-                
+
                 btagup_pe = 0
                 wHisto_btagup_pe.SetBinContent(i, j, btagup_pe)
-                
+
                 btagdown_pe = 0
                 wHisto_btagdown_pe.SetBinContent(i, j, btagdown_pe)
 
                 btagerr_pe = 0
                 wHisto_btagerr_pe.SetBinContent(i, j, btagerr_pe)
-                
+
                 continue
 
 
@@ -613,7 +644,7 @@ def convertTree2Dataset(tree, outputFile, config, Min, Max, filter, run, mstop, 
                 JESerr_pe = 0.75*(JESerr_pe / abs(JESerr_pe))
             #if JESerr_pe > 0.75: JESerr_pe = 0.75
             wHisto_JESerr_pe.SetBinContent(i, j, JESerr_pe)
-            
+
             pdferr_pe = pdferr / pdfcen
             wHisto_pdferr_pe.SetBinContent(i, j, pdferr_pe)
 
@@ -625,14 +656,14 @@ def convertTree2Dataset(tree, outputFile, config, Min, Max, filter, run, mstop, 
 
             btagerr_pe = (btagup_pe + btagdown_pe) / 2.
             wHisto_btagerr_pe.SetBinContent(i, j, btagerr_pe)
-            
+
             print btagdown_pe, btagup_pe, btagerr_pe, JESdown_pe, JESup_pe, JESerr_pe, pdferr_pe
-            
+
 
     numEntries = data.numEntries()
     if Min < 0: Min = 0
     if Max < 0: Max = numEntries
-    
+
     rdata = data.reduce(rt.RooFit.EventRange(Min,Max))
     if write:
         writeTree2DataSet([rdata,nLooseElectrons,nLooseMuons,nLooseTaus,
@@ -641,7 +672,7 @@ def convertTree2Dataset(tree, outputFile, config, Min, Max, filter, run, mstop, 
     return rdata
 
 if __name__ == '__main__':
-    
+
     parser = OptionParser()
     parser.add_option('-c','--config',dest="config",type="string",default=None,
                   help="Name of the config file to use")
@@ -668,17 +699,16 @@ if __name__ == '__main__':
     parser.add_option('--mlsp',dest="mlsp",default=0,type=float,
                   help="The name of the TTree to use")
 
-      
     (options,args) = parser.parse_args()
-    
+
     if options.config is None:
         import inspect, os
         topDir = os.path.abspath(os.path.dirname(inspect.getsourcefile(convertTree2Dataset)))
-        options.config = os.path.join(topDir,'boxConfig.cfg')    
+        options.config = os.path.join(topDir,'boxConfig.cfg')
     cfg = Config.Config(options.config)
-    
+
     print 'Input files are %s' % ', '.join(args)
-    
+
     chain = rt.TChain(options.name)
     fName = None
     for f in args:
@@ -700,9 +730,9 @@ if __name__ == '__main__':
     #convertTree2Dataset(chain,fName, cfg,options.min,options.max,CR6JBVetoBoxHS(CalcBDT(chain)),options.run)
     #convertTree2Dataset(chain,fName, cfg,options.min,options.max,CR6JSingleLeptonBVetoLS(CalcBDT(chain)),options.run)
     #convertTree2Dataset(chain,fName, cfg,options.min,options.max,CR6JSingleLeptonBVetoHS(CalcBDT(chain)),options.run)        
-    convertTree2Dataset(chain,fName, cfg,options.min,options.max,MuBox(None),options.run, options.mstop, options.mlsp)
+    # convertTree2Dataset(chain,fName, cfg,options.min,options.max,MuBox(None),options.run, options.mstop, options.mlsp)
     #convertTree2Dataset(chain,fName, cfg,options.min,options.max,CRMuBVetoBox(None),options.run)
-    convertTree2Dataset(chain,fName, cfg,options.min,options.max,EleBox(None),options.run, options.mstop, options.mlsp)
+    # convertTree2Dataset(chain,fName, cfg,options.min,options.max,EleBox(None),options.run, options.mstop, options.mlsp)
     #convertTree2Dataset(chain,fName, cfg,options.min,options.max,CREleBVetoBox(None),options.run)
 
 

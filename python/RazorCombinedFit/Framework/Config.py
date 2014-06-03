@@ -86,8 +86,4 @@ class Config(object):
         result = []
         for v in varNames:
             result.append(eval(self.get(box, 'signal_%s' %  v)) )
-        return result        
-        
-        
-        
-        
+        return result
