@@ -69,7 +69,7 @@ def findLeptonProb(flavor, pt = 0., eta = 0., errDir = 0):
 def writeTree2DataSet(data,outputDir, outputFile, box, rMin, mRmin, label, args, jes_pe, pdf_pe, btag_pe, isr_pe, lep_pe, nominal, pdf_cen, jes_up, jes_down, pdf_up, pdf_down, btag_up, btag_down, isr_up, isr_down, lep_up, lep_down, mstop, mlsp):
 
     # Load the file with the SMS number of total events per each point
-    file = open('/afs/cern.ch/work/l/lucieg/public/forRazorStop/SMS-T2tt_mStop-Combo_8TeV-Pythia6Z-Summer12-START52_V9_FSIM-v1-SUSY/SMS-T2tt_mStop-Combo.0_8TeV-Pythia6Z-Summer12-START52_V9_FSIM-v1-SUSY.pkl','rb')
+    file = open('/home/uscms208/cms/RazorCombinedFit_Git/T3/SusyTrees/T2tt/SMS-T2tt_mStop-Combo.0_8TeV-Pythia6Z-Summer12-START52_V9_FSIM-v1-SUSY.pkl','rb')
     # Get the original event weight, which is 1/nevts for a given process
     point  = (mstop, mlsp)
     norms  = pickle.load(file)
@@ -77,8 +77,8 @@ def writeTree2DataSet(data,outputDir, outputFile, box, rMin, mRmin, label, args,
     print weight
 
     #for d in data:
-     
-    for histo in [nominal, pdf_cen, jes_up, jes_down, pdf_up, pdf_down, btag_up, btag_down, isr_up, isr_down, lep_up, lep_down]:     
+
+    for histo in [nominal, pdf_cen, jes_up, jes_down, pdf_up, pdf_down, btag_up, btag_down, isr_up, isr_down, lep_up, lep_down]:
         histo.Scale(weight)
 
     print "signal efficiency from nominal     = %f"%nominal.Integral()
@@ -217,7 +217,7 @@ def convertTree2Dataset(tree, outputDir, outputFile, config, Min, Max, filter, r
 ##                 data.add(a)
 
         a = rt.RooArgSet(args)
-         
+
         a.setRealValue('MR',tree.MR, True)
         a.setRealValue('Rsq',tree.RSQ, True)
         a.setRealValue('nBtag',tree.nCSVM)
@@ -225,7 +225,7 @@ def convertTree2Dataset(tree, outputDir, outputFile, config, Min, Max, filter, r
 
         a.Print('V')
         data.add(a)
-       
+
         #### systematics
         # Get the btag systematics
         jet_pt = tree.jet_pt
@@ -407,7 +407,7 @@ def convertTree2Dataset(tree, outputDir, outputFile, config, Min, Max, filter, r
     isr_denom.Add(isr_up,1.0/3.0)
     isr_denom.Add(pdf_cen,1.0/3.0)
     isr_denom.Add(isr_down,1.0/3.0)
-    
+
     isr_pe.Divide(isr_denom)
 
     ####### PDF #######
@@ -425,7 +425,7 @@ def convertTree2Dataset(tree, outputDir, outputFile, config, Min, Max, filter, r
     pdf_pe = pdf_err.Clone("wHisto_pdferr_pe")
     pdf_pe.SetTitle("wHisto_pdferr_pe") 
     pdf_pe.Divide(pdf_cen)
-   
+
     numEntries = data.numEntries()
     if Min < 0: Min = 0
     if Max < 0: Max = numEntries
@@ -443,9 +443,9 @@ if __name__ == '__main__':
     parser.add_option('--max',dest="max",type="int",default=-1,
                   help="The last event to take from the input Dataset")
     parser.add_option('--min',dest="min",type="int",default=0,
-                  help="The first event to take from the input Dataset")  
-    parser.add_option('-b','--box',dest="box",type="string",default="",
-                  help="box to run")     
+                  help="The first event to take from the input Dataset")
+    # parser.add_option('-b','--box',dest="box",type="string",default="",
+    #               help="box to run")
     parser.add_option('-e','--eff',dest="eff",default=False,action='store_true',
                   help="Calculate the MC efficiencies")
     parser.add_option('-f','--flavour',dest="flavour",default='TTj',
@@ -454,8 +454,8 @@ if __name__ == '__main__':
                   help="The minimum run number")
     parser.add_option('-d','--dir',dest="outdir",default="./",type="string",
                   help="Output directory to store datasets")
- ##    parser.add_option('-x','--box',dest="box",default=None,type="string",
-##                   help="Specify only one box")
+    parser.add_option('-x', '--box', dest="box", default=None, type="string",
+                  help="Specify only one box")
     parser.add_option('--name',dest="name",default='RMRTree',type="string",
                   help="The name of the TTree to use")
     parser.add_option('--mstop',dest="mstop",default=650,type=float,
@@ -463,13 +463,13 @@ if __name__ == '__main__':
     parser.add_option('--mlsp',dest="mlsp",default=0,type=float,
                   help="The name of the TTree to use")
 
-      
-    (options,args) = parser.parse_args()
-    
+
+    (options, args) = parser.parse_args()
+
     if options.config is None:
         import inspect, os
         topDir = os.path.abspath(os.path.dirname(inspect.getsourcefile(convertTree2Dataset)))
-        options.config = os.path.join(topDir,'boxConfig.cfg')    
+        options.config = os.path.join(topDir, 'boxConfig.cfg')
     cfg = Config.Config(options.config)
     box = options.box
     outputDir = options.outdir
@@ -491,16 +491,17 @@ if __name__ == '__main__':
     #for doing all the crap with btags and scale factors
     tagger = BTag('T2tt')
     muonScaling = MuSFUtil()
-    eleScaling  = EleSFUtil()
-   
-    ## if box == "BJetHS" :
-##         convertTree2Dataset(chain, outputDir, fName, cfg, options.min,options.max,BJetBoxLS(CalcBDT(chain)),options.run, options.mstop, options.mlsp)
-##     elif box == "BJetLS" :
-##         convertTree2Dataset(chain, outputDir, fName, cfg,options.min,options.max,BJetBoxHS(CalcBDT(chain)),options.run, options.mstop, options.mlsp)
+    eleScaling = EleSFUtil()
+
+    if box == "BJetHS":
+        convertTree2Dataset(chain, outputDir, fName, cfg, options.min,
+                            options.max, BJetBoxLS(CalcBDT(chain)), options.run,
+                            options.mstop, options.mlsp)
+    elif box == "BJetLS":
+        convertTree2Dataset(chain, outputDir, fName, cfg, options.min,
+                            options.max, BJetBoxHS(CalcBDT(chain)), options.run,
+                            options.mstop, options.mlsp)
 ##     elif box == "Mu" :
-    convertTree2Dataset(chain, outputDir, fName, cfg,options.min,options.max,MuBox(None),options.run, options.mstop, options.mlsp)
+    # convertTree2Dataset(chain, outputDir, fName, cfg,options.min,options.max,MuBox(None),options.run, options.mstop, options.mlsp)
 ##     else :
 ##    convertTree2Dataset(chain, outputDir, fName, cfg,options.min,options.max,EleBox(None),options.run, options.mstop, options.mlsp)
-   
-
-
