@@ -9,6 +9,8 @@ from pdfShit import *
 import glob
 import sys, re
 sys.path.append(os.path.join(os.environ['RAZORFIT_BASE'], 'macros/multijet'))
+sys.path.append(os.path.join(os.environ['RAZORFIT_BASE'], 'python/SingleBoxFit'))
+
 
 def getCutString(box, signalRegion):
     if box in ["Ele","Mu"]:
@@ -358,6 +360,8 @@ if __name__ == '__main__':
     extRazorPdf_TTj2b = rt.RooExtendPdf("ext%s_%s"%(box,"TTj2b"),"extRazorPdf_%s_%s"%(box,"TTj2b"),razorPdf_TTj2b,w.var("%s_TTj2b_norm"%box))
     RootTools.Utils.importToWS(w,extRazorPdf_TTj2b)
     pdfList.add(extRazorPdf_TTj2b)
+
+    print "**************** I bet the MOTHERFUCKER is here"
 
     if box in ["BJetHS", "BJetLS"]:
         razorPdf_Vpj = rt.RooRazor3DBinPdf("%s_%s" % (box, "Vpj"), "razorPdf_%s_%s"%(box, "Vpj"),
