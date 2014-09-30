@@ -28,9 +28,9 @@ old_crap/
 *.dylib
 *.dll
 *.pyc
-# */*.pyc
-# */*/*.pyc
-# python/RootTools/*.pyc
+*/*.pyc
+*/*/*.pyc
+python/RootTools/*.pyc
 
 # Compiled Static libraries
 *.lai

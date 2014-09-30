@@ -45,6 +45,10 @@ class SingleBoxAnalysis(Analysis.Analysis):
             if self.options.input is not None:
                 continue
 
+            boxes[box].defineSet("pdfpars_TTj3b", self.config.getVariables(box, "pdf_TTj3b"))
+            boxes[box].defineSet("otherpars_TTj3b", self.config.getVariables(box, "others_TTj3b"))
+            boxes[box].defineSet("btagpars_TTj3b", self.config.getVariables(box, "btag_TTj3b"))
+
             boxes[box].defineSet("pdfpars_TTj2b", self.config.getVariables(box, "pdf_TTj2b"))
             boxes[box].defineSet("otherpars_TTj2b", self.config.getVariables(box, "others_TTj2b"))
             boxes[box].defineSet("btagpars_TTj2b", self.config.getVariables(box, "btag_TTj2b"))
@@ -221,10 +225,10 @@ class SingleBoxAnalysis(Analysis.Analysis):
         fileIndex = self.indexInputFiles(inputFiles)
         boxes = self.getboxes(fileIndex)
 
-        #start by setting all box configs the same
+        # start by setting all box configs the same
         for box, fileName in fileIndex.iteritems():
 
-            #if no input fit result file
+            # if no input fit result file
             if self.options.input is None:
 
                 print 'Variables for box %s' % box
@@ -238,54 +242,45 @@ class SingleBoxAnalysis(Analysis.Analysis):
 
                 if boxes[box].fitMode == '2D':
                     boxes[box].fixPars('n_TTj2b', True)
+                boxes[box].fixPars('n_TTj3b', True)
 
-                fr = boxes[box].fit(fileName, boxes[box].cut, rt.RooFit.PrintEvalErrors(-1),
-                                    rt.RooFit.Extended(True), rt.RooFit.Range(fit_range))
+                fr = boxes[box].fit(fileName, boxes[box].cut,
+                                    rt.RooFit.PrintEvalErrors(-1),
+                                    rt.RooFit.Extended(True),
+                                    rt.RooFit.Range(fit_range),
+                                    rt.RooFit.minos(boxes[box].workspace.var("MR0_TTj2b")))
 
                 self.store(fr, name='independentFR', dir=box)
                 self.store(fr.correlationHist("correlation_%s" % box), dir=box)
-                #store it in the workspace too
+                # store it in the workspace too
                 getattr(boxes[box].workspace, 'import')(fr, 'independentFR')
-                #store the name of the PDF used
+                # store the name of the PDF used
                 getattr(boxes[box].workspace, 'import')(rt.TObjString(boxes[box].fitmodel), 'independentFRPDF')
-
-                #make any plots required
+                # make any plots required
                 boxes[box].plot(fileName, self, box, data=boxes[box].workspace.data('RMRTree'),
                                 fitmodel=boxes[box].fitmodel, frName='independentFR')
             else:
 
-                wsName = '%s/Box%s_workspace' % (box, box)
+                # wsName = '%s/Box%s_workspace' % (box, box)
+                wsName = 'w%s' % box
                 print "Restoring the workspace from %s" % self.options.input
-                boxes[box].restoreWorkspace(self.options.input, wsName)
-                print 'Variables for box %s' % box
-                boxes[box].workspace.allVars().Print('V')
+                # boxes[box].restoreWorkspace(self.options.input, wsName)
+                boxes[box].makeRooRazor3DBin(self.options.input, box)
+                boxes[box].importDataToWS(self.options.input, box)
+                # print 'Variables for box %s' % box
+                # boxes[box].workspace.allVars().Print('V')
                 print 'Workspace'
                 boxes[box].workspace.Print('V')
-
-        if len(boxes) > 1 and self.options.simultaneous:
-            #merge the boxes together in some way
-            import RazorMultiBoxSim
-            multi = RazorMultiBoxSim.RazorMultiBoxSim(self)
-            #restore the simultaneous fits if required
-            if self.options.input is None:
-                multi.combine(boxes, fileIndex)
-                multi.plot(fileName, self, 'Simultaneous')
-                self.store(rt.TObjString(multi.workspace.GetName()), 'simultaneousName')
-            else:
-                print "Restoring the workspace from %s" % self.options.input
-                multi.restoreWorkspace(self.options.input, multi.name, name='simultaneousFRPDF')
-                multi.setCombinedCut(boxes)
-            self.workspace = multi.workspace
-
-            #run the model independent limit setting code if needed
-            if self.options.model_independent_limit:
-                multi.predictBackground(boxes.keys(), multi.workspace.obj('simultaneousFR'), fileIndex)
+                # # this is new also
+                fit_range = boxes[box].fitregion
+                fr = boxes[box].fit(fileName, boxes[box].cut, rt.RooFit.PrintEvalErrors(-1),
+                                    rt.RooFit.Extended(True), rt.RooFit.Range(fit_range))
 
         if self.options.model_independent_limit:
             for box, fileName in fileIndex.iteritems():
                 boxes[box].predictBackground(boxes[box].workspace.obj('independentFR'), fileName)
 
-        #skip saving the workspace if the option is set
+        # skip saving the workspace if the option is set
         if not self.options.nosave_workspace:
             for box in boxes.keys():
                 self.store(boxes[box].workspace, 'Box%s_workspace' % box, dir=box)
@@ -1548,7 +1543,6 @@ class SingleBoxAnalysis(Analysis.Analysis):
 
     def limit_simult(self, inputFiles, nToys, nToyOffset):
         """Set a limit based on the model dependent method"""
-
 
         def mergeDatasets(datasets, cat, makeBinned = False):
             """Take all of the RooDatasets and merge them into a new one with a RooCategory column"""

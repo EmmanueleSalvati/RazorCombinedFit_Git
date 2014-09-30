@@ -1,19 +1,21 @@
 import ROOT as rt
 import RootTools
 
+
 def getCrossSections():
     """Return the NLO cross-sections used in the normalsation"""
 
-    #the QCD cross-section is basically a junk value
+    # the QCD cross-section is basically a junk value
     return {'SingleTop_s':4.21,'SingleTop_t':64.6,'SingleTop_tw':10.6,\
                                'TTj':234.,'Zll':3048/3.,'Znn':2*3048,'Wln':31314/3.,\
                                'WW':43,'WZ':18.2,'ZZ':5.9,'Vgamma':173,
                                'QCD':26456
                                }
 
+
 class Box(object):
 
-    def __init__(self, name, variables, workspace = None):
+    def __init__(self, name, variables, workspace=None):
         self.name = name
 
         if workspace is None:
@@ -38,7 +40,7 @@ class Box(object):
             result = self.workspace.factory("expr::Ntot('@0*@1*@2*@3',Lumi,Sigma,Epsilon, rEps)")
         return result
 
-    def getVarRangeCut(self, range = ''):
+    def getVarRangeCut(self, range=''):
         cut = ''
         def var_cut(v):
             if v.GetName()=="CHARGE": return '( (%s >= %f) && (%s <= %f) )' % (v.GetName(),v.getMin(range),v.GetName(),v.getMax(range))
@@ -83,7 +85,7 @@ class Box(object):
         if self.workspace.obj(name):
             self.fitmodel = self.workspace.obj(name).GetName()
         else:
-            #set the name of the fitmodel from the workspace
+            # set the name of the fitmodel from the workspace
             master = 'fitmodel'
             for p in RootTools.RootIterator.RootIterator(pdfs):
                 if 'fitmodel' in p.GetName():
@@ -161,15 +163,14 @@ class Box(object):
 
         rootFile = rt.TFile.Open(inputFile)
         wHisto = rootFile.Get('wHisto_pdferr_nom')
-        btag =  rootFile.Get('wHisto_btagerr_pe')
-        jes =  rootFile.Get('wHisto_JESerr_pe')
-        pdf =  rootFile.Get('wHisto_pdferr_pe')
-        isr =  rootFile.Get('wHisto_ISRerr_pe')
-
+        btag = rootFile.Get('wHisto_btagerr_pe')
+        jes = rootFile.Get('wHisto_JESerr_pe')
+        pdf = rootFile.Get('wHisto_pdferr_pe')
+        isr = rootFile.Get('wHisto_ISRerr_pe')
 
         def renameAndImport(histo):
-            #make a memory resident copy
-            newHisto = histo.Clone('%s_%s' % (histo.GetName(),self.name))
+            # make a memory resident copy
+            newHisto = histo.Clone('%s_%s' % (histo.GetName(), self.name))
             newHisto.SetDirectory(0)
             self.importToWS(newHisto)
             return newHisto
@@ -196,35 +197,163 @@ class Box(object):
 
         return (signal.GetName(),sigNorm)
 
+    def makeRooRazor3DBin(self, inputFile, box):
+        """Imports RooRazor3DBinPdf from a data card its components"""
+        rootFile = rt.TFile.Open(inputFile)
+        ws = rootFile.Get('w%s' % box)
+        # This is to get the pdf's directly from the data card
+        # tt1 = ws.pdf("extBJetLS_TTj1b")
+        # tt2 = ws.pdf("extBJetLS_TTj2b")
+        # tt3 = ws.pdf("extBJetLS_TTj3b")
+        # vpj = ws.pdf("extBJetLS_Vpj")
+        # pdfList = rt.RooArgList()
+        # pdfList.add(tt1)
+        # pdfList.add(tt2)
+        # pdfList.add(tt3)
+        # pdfList.add(vpj)
+        # razorPdf = rt.RooAddPdf("razorPdf_%s" % box,
+        #                         "razorPdf_%s" % box, pdfList)
+
+        # Here we build the 3D bin pdf from scratch
+        variables = ws.allVars()
+        for var in RootTools.RootIterator.RootIterator(variables):
+            self.importToWS(var)
+
+        pdfList = rt.RooArgList()
+
+        self.workspace.Print("V")
+        razorPdf_TTj1b = rt.RooRazor3DBinPdf("%s_%s" % (box, "TTj1b"),
+                                             "razorPdf_%s_%s" % (box, "TTj1b"),
+                                             ws.var("th1x"),
+                                             ws.var("MR0_%s_%s" % ("TTj1b", box)),
+                                             ws.var("R0_%s_%s" % ("TTj1b", box)),
+                                             ws.var("b_%s_%s" % ("TTj1b", box)),
+                                             ws.var("n_%s_%s" % ("TTj1b", box)),
+                                             ws.var("MRCut_%s" % (box)),
+                                             ws.var("RCut_%s" % (box)),
+                                             ws.var("BtagCut_%s" % ("TTj1b")),
+                                             ws.obj("EmptyHist3D_%s" % (box)))
+
+        extRazorPdf_TTj1b = rt.RooExtendPdf("ext%s_%s" % (box, "TTj1b"),
+                                            "extRazorPdf_%s_%s" % (box, "TTj1b"),
+                                            razorPdf_TTj1b,
+                                            ws.var("%s_TTj1b_norm" % box))
+        pdfList.add(extRazorPdf_TTj1b)
+
+        razorPdf_TTj2b = rt.RooRazor3DBinPdf("%s_%s" % (box, "TTj2b"),
+                                             "razorPdf_%s_%s" % (box, "TTj2b"),
+                                             ws.var("th1x"),
+                                             ws.var("MR0_%s_%s" % ("TTj2b", box)),
+                                             ws.var("R0_%s_%s" % ("TTj2b", box)),
+                                             ws.var("b_%s_%s" % ("TTj2b", box)),
+                                             ws.var("n_%s_%s" % ("TTj2b", box)),
+                                             ws.var("MRCut_%s" % (box)),
+                                             ws.var("RCut_%s" % (box)),
+                                             ws.var("BtagCut_%s" % ("TTj2b")),
+                                             ws.obj("EmptyHist3D_%s" % (box)))
+
+        val = ws.var("Ntot_TTj2b_%s" % box).getVal() * (1.0 - ws.var("f3_TTj2b_%s" % box).getVal())
+        ttj2b_norm = rt.RooRealVar("%s_%s_norm[%f,0,1e6]" % (box, "TTj2b", val),
+                                   "%s_%s_norm[%f,0,1e6]" % (box, "TTj2b", val),
+                                   val)
+
+        extRazorPdf_TTj2b = rt.RooExtendPdf("ext%s_%s" % (box, "TTj2b"),
+                                            "extRazorPdf_%s_%s" % (box, "TTj2b"),
+                                            razorPdf_TTj2b,
+                                            ttj2b_norm)
+        pdfList.add(extRazorPdf_TTj2b)
+
+        razorPdf_TTj3b = rt.RooRazor3DBinPdf("%s_%s" % (box, "TTj3b"),
+                                             "razorPdf_%s_%s" % (box, "TTj3b"),
+                                             ws.var("th1x"),
+                                             ws.var("MR0_%s_%s" % ("TTj2b", box)),
+                                             ws.var("R0_%s_%s" % ("TTj2b", box)),
+                                             ws.var("b_%s_%s" % ("TTj2b", box)),
+                                             ws.var("n_%s_%s" % ("TTj2b", box)),
+                                             ws.var("MRCut_%s" % (box)),
+                                             ws.var("RCut_%s" % (box)),
+                                             ws.var("BtagCut_%s" % ("TTj3b")),
+                                             ws.obj("EmptyHist3D_%s" % (box)))
+
+        val = ws.var("Ntot_TTj2b_%s" % box).getVal() * ws.var("f3_TTj2b_%s" % box).getVal()
+        print "This is val", val
+        ttj3b_norm = rt.RooRealVar("%s_%s_norm[%f,0,1e6]" % (box, "TTj3b", val),
+                                   "%s_%s_norm[%f,0,1e6]" % (box, "TTj3b", val),
+                                   val)
+        ttj3b_norm.setError(ws.var("Ntot_TTj2b_%s" % box).getError() *
+                            ws.var("f3_TTj2b_%s" % box).getVal())
+
+        print "and this is fucking ttj3b_norm", ttj3b_norm.getVal()
+
+        extRazorPdf_TTj3b = rt.RooExtendPdf("ext%s_%s" % (box, "TTj3b"),
+                                            "extRazorPdf_%s_%s" % (box, "TTj3b"),
+                                            razorPdf_TTj3b,
+                                            ws.var("%s_TTj3b_norm" % box))
+        pdfList.add(extRazorPdf_TTj3b)
+
+        razorPdf_Vpj = rt.RooRazor3DBinPdf("%s_%s" % (box, "Vpj"),
+                                           "razorPdf_%s_%s" % (box, "Vpj"),
+                                           ws.var("th1x"),
+                                           ws.var("MR0_%s_%s" % ("Vpj", box)),
+                                           ws.var("R0_%s_%s" % ("Vpj", box)),
+                                           ws.var("b_%s_%s" % ("Vpj", box)),
+                                           ws.var("n_%s_%s" % ("Vpj", box)),
+                                           ws.var("MRCut_%s" % (box)),
+                                           ws.var("RCut_%s" % (box)),
+                                           ws.var("BtagCut_%s" % ("Vpj")),
+                                           ws.obj("EmptyHist3D_%s" % (box)))
+
+        extRazorPdf_Vpj = rt.RooExtendPdf("ext%s_%s" % (box, "Vpj"),
+                                          "extRazorPdf_%s_%s" % (box, "Vpj"),
+                                          razorPdf_Vpj,
+                                          ws.var("%s_Vpj_norm" % box))
+        pdfList.add(extRazorPdf_Vpj)
+
+        razorPdf = rt.RooAddPdf("razorPdf_%s" % box,
+                                "razorPdf_%s" % box, pdfList)
+        rootFile.Close()
+        self.importToWS(razorPdf)
+
+    def importDataToWS(self, inputfile, box):
+        """Import data hist to self.workspace from data card"""
+        rootFile = rt.TFile.Open(inputfile)
+        ws = rootFile.Get('w%s' % box)
+        data_obs = ws.data('data_obs')
+        self.importToWS(data_obs)
+
     def importToWS(self, *args):
         """Utility function to call the RooWorkspace::import methods"""
         return getattr(self.workspace,'import')(*args)
 
-    def fit(self, inputFile, reduce = None, *options):
+    def fit(self, inputFile, reduce=None, *options):
         """Take the dataset and fit it with the top level pdf. Return the fitresult"""
         data = self.workspace.data("RMRTree")
-
         return self.fitData(self.getFitPDF(), data, *options)
+
+        # print "workspace is", self.workspace.GetName()
+        # data = self.workspace.data("data_obs")
+        # print "and data is", data
+        # print "what is self.getFitPDF", self.getFitPDF("razorPdf_BJetLS")
+        # return self.fitData(self.getFitPDF("razorPdf_BJetLS"), data, *options)
 
     def fitDataSilent(self, pdf, data, *options):
         """Take the dataset and fit it with the top level pdf. Return the fitresult"""
 
         opt = rt.RooLinkedList()
-        #always save the fit result
+        # always save the fit result
         opt.Add(rt.RooFit.Save(True))
-        #automagically determine the number of cpus
+        # automagically determine the number of cpus
         opt.Add(rt.RooFit.NumCPU(RootTools.Utils.determineNumberOfCPUs()))
         for o in options:
             opt.Add(o)
 
         if data.isWeighted():
             opt.Add(rt.RooFit.SumW2Error(True))
-        print "About to fit data %s with options:"%data.GetName()
+        print "About to fit data %s with options:" % data.GetName()
         data.Print()
         opt.Print("")
         result = pdf.fitTo(data, opt)
         return result
-
 
     def fitData(self, pdf, data, *options):
         """Take the dataset and fit it with the top level pdf. Return the fitresult"""
@@ -235,7 +364,6 @@ class Box(object):
         else:
             print 'The dataset is unweighted: Performing a normal fit'
             print 'Fitting to %d unweighted events'%data.numEntries()
-
 
         result = self.fitDataSilent(pdf, data, *options)
         result.Print('V')
@@ -297,7 +425,6 @@ class Box(object):
 
         assert ds.numEntries() == num
         return ds
-
 
     def plotObservables(self, inputFile, name = None, range = ''):
         """Make control plots for variables defined in the 'variables' part of the config"""
