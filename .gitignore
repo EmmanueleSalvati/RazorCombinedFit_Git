@@ -4,15 +4,23 @@
 *.o
 *.obj
 *.pdf
+*.png
 toys_files*
+razor_combine*
 .DS_Store
 */.DS_Store
 fit_results/With_duplicates_bug/
+Javier_output/
 submit/
+tmp_datasets/
+combine_output/
 Datasets/With_duplicates_bug
+Datasets/*
+RazorCombinedFit_Git*
 src/rootdict.*
 fitmodel_graphViz.*
 T3
+old_crap/
 
 # Compiled Dynamic libraries
 *.so

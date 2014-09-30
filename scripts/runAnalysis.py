@@ -63,7 +63,7 @@ def defineParser():
                       help="Do not save the RooWorkspaces to save disk space for limit setting")
     parser.add_option('--fitmode', dest="fitMode", type="string", default='3D',
                       help="Type of fit to run - 2D, 3D, 4D are all valid options")
-    parser.add_option('--btag', dest="btag", action="store_true", default=True,
+    parser.add_option('--btag', dest="btag", action="store_true", default=False,
                       help="Include the btag dimension in the fits")
     parser.add_option('--run-cls', dest="runCLS", action="store_true", default=False,
                       help="Run the 2012 profile style CLS code")

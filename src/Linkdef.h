@@ -15,6 +15,7 @@
 #pragma link C++ defined_in "RooRazor2DTail_SYS.h";
 #pragma link C++ defined_in "RooRazorLShape.h";
 #pragma link C++ defined_in "RooRazor3DBinPdf.h";
+#pragma link C++ defined_in "RooRazor2DBinPdf.h";
 #pragma link C++ defined_in "RooBTagMult.h";
 #pragma link C++ defined_in "VecbosBtagPdf.h";
 #pragma link C++ defined_in "StandardHypoTestInvDemo.h";
