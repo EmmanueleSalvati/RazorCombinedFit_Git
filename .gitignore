@@ -5,6 +5,7 @@
 *.obj
 *.pdf
 *.png
+*.root
 toys_files*
 razor_combine*
 .DS_Store
@@ -26,11 +27,10 @@ old_crap/
 *.so
 *.dylib
 *.dll
-
 *.pyc
-*/*.pyc
-*/*/*.pyc
-python/RootTools/*.pyc
+# */*.pyc
+# */*/*.pyc
+# python/RootTools/*.pyc
 
 # Compiled Static libraries
 *.lai
