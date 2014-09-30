@@ -6,6 +6,7 @@
 *.pdf
 *.png
 *.root
+*.log
 toys_files*
 razor_combine*
 .DS_Store

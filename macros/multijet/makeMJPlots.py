@@ -361,9 +361,8 @@ if __name__ == '__main__':
 
         input.Close()
 
-    # loop('MultiJet-Run2011A-05Aug2011-v1-wreece_130112_MR500.0_R0.173205080757_Had.root')
-    # loop('MultiJet-Run2011A-05Aug2011-v1-wreece_130112_MR500.0_R0.173205080757_nBtag_1_BJet.root')
-    loop('Datasets/TTJets_MassiveBinDECAY_TuneZ2star_8TeV-madgraph-tauola-Summer12_DR53X-PU_S10_START53_V7C-v1-SUSY_MR450.0_R0.282842712475_BTAG_BJetHS.root')
+    # loop('Datasets/TTJets_MassiveBinDECAY_TuneZ2star_8TeV-madgraph-tauola-Summer12_DR53X-PU_S10_START53_V7C-v1-SUSY_MR450.0_R0.282842712475_BTAG_BJetHS.root')
+    loop('Datasets/T2tt/SMS-T2tt_mStop-Combo_mLSP_25.0_8TeV-Pythia6Z-Summer12-START52_V9_FSIM-v1-SUSY_MR450.0_R0.316227766017_450.0_25.0_BJetHS.root')
 
     [p.final() for p in plotters]
     store.write()
