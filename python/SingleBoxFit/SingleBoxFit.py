@@ -247,8 +247,7 @@ class SingleBoxAnalysis(Analysis.Analysis):
                 fr = boxes[box].fit(fileName, boxes[box].cut,
                                     rt.RooFit.PrintEvalErrors(-1),
                                     rt.RooFit.Extended(True),
-                                    rt.RooFit.Range(fit_range),
-                                    rt.RooFit.minos(boxes[box].workspace.var("MR0_TTj2b")))
+                                    rt.RooFit.Range(fit_range))
 
                 self.store(fr, name='independentFR', dir=box)
                 self.store(fr.correlationHist("correlation_%s" % box), dir=box)
