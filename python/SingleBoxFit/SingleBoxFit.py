@@ -45,9 +45,9 @@ class SingleBoxAnalysis(Analysis.Analysis):
             if self.options.input is not None:
                 continue
 
-            boxes[box].defineSet("pdfpars_TTj3b", self.config.getVariables(box, "pdf_TTj3b"))
-            boxes[box].defineSet("otherpars_TTj3b", self.config.getVariables(box, "others_TTj3b"))
-            boxes[box].defineSet("btagpars_TTj3b", self.config.getVariables(box, "btag_TTj3b"))
+            # boxes[box].defineSet("pdfpars_TTj3b", self.config.getVariables(box, "pdf_TTj3b"))
+            # boxes[box].defineSet("otherpars_TTj3b", self.config.getVariables(box, "others_TTj3b"))
+            # boxes[box].defineSet("btagpars_TTj3b", self.config.getVariables(box, "btag_TTj3b"))
 
             boxes[box].defineSet("pdfpars_TTj2b", self.config.getVariables(box, "pdf_TTj2b"))
             boxes[box].defineSet("otherpars_TTj2b", self.config.getVariables(box, "others_TTj2b"))
@@ -240,14 +240,16 @@ class SingleBoxAnalysis(Analysis.Analysis):
                 fit_range = boxes[box].fitregion
                 print 'Using the fit range: %s' % fit_range
 
-                if boxes[box].fitMode == '2D':
-                    boxes[box].fixPars('n_TTj2b', True)
+                # if boxes[box].fitMode == '2D':
+                #     boxes[box].fixPars('n_TTj2b', True)
                 boxes[box].fixPars('n_TTj3b', True)
 
                 fr = boxes[box].fit(fileName, boxes[box].cut,
                                     rt.RooFit.PrintEvalErrors(-1),
                                     rt.RooFit.Extended(True),
                                     rt.RooFit.Range(fit_range))
+                                    # rt.RooFit.Hesse(False))
+                                    # rt.RooFit.Minos(boxes[box].workspace.set("pdfpars_TTj3b")))
 
                 self.store(fr, name='independentFR', dir=box)
                 self.store(fr.correlationHist("correlation_%s" % box), dir=box)
@@ -490,10 +492,10 @@ class SingleBoxAnalysis(Analysis.Analysis):
             return fr_SpB
 
 
-        #start by setting all box configs the same
+        # start by setting all box configs the same
         for box, fileName in fileIndex.iteritems():
             # restore the workspace now
-            wsName = '%s/Box%s_workspace' % (box,box)
+            wsName = '%s/Box%s_workspace' % (box, box)
             print "Restoring the workspace from %s" % self.options.input
             boxes[box].restoreWorkspace(self.options.input, wsName)
 

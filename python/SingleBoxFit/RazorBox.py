@@ -7,13 +7,17 @@ from array import *
 # this is global, to be reused in the plot making
 def getBinning(boxName, varName, btag):
     """binning used in the fit"""
-    # if boxName in ["BJetHS", "BJetLS"]:
+    if boxName in ['Ele']:
+        if varName == "MR":
+            return [350, 450, 550, 700, 900, 1200, 1600, 2500, 4000]
+        elif varName == "Rsq":
+            return [0.08, 0.10, 0.15, 0.20, 0.30, 0.41, 0.52, 0.64, 0.80, 1.5]
+
     if varName == "MR":
         return [450, 600, 750, 900, 1200, 1600, 4000]
-        # return [450, 550, 700, 900, 1200, 1600, 2500, 4000]
     elif varName == "Rsq":
-        return [0.10, 0.13, 0.20, 0.30, 0.41, 0.52, 0.64, 1.5]
-        # return [0.10, 0.13, 0.20, 0.30, 0.41, 0.52, 0.64, 0.80, 1.5]
+        # return [0.10, 0.13, 0.20, 0.30, 0.41, 0.52, 0.64, 1.5]
+        return [0.15, 0.20, 0.30, 0.41, 0.52, 0.64, 1.5]
 
     if varName == "nBtag":
         if btag == "NoBtag":
@@ -43,17 +47,15 @@ class RazorBox(Box.Box):
         # data
         if not btag:
             self.btag = "NoBtag"
-            self.zeros = {'TTj1b': [],
+            self.zeros = {'TTj1b': ['BJetLS'],
                           'TTj2b': [],
-                          'TTj3b': ['BJetLS'],
                           'Vpj': ['BJetLS']}
         else:
             self.btag = "Btag"
             self.njet = "Jet"
-            self.zeros = {'TTj1b': ['BJetLS'],
+            self.zeros = {'TTj1b': [],
                           'TTj2b': [],
-                          'TTj3b': [],
-                          'Vpj': ['Mu', 'Ele', 'BJetLS', 'BJetHS']}
+                          'Vpj': ['Mu', 'Ele', 'BJetHS']}
 
         if fitregion == "Sideband":
             self.fitregion = "LowRsq,LowMR"
@@ -63,7 +65,7 @@ class RazorBox(Box.Box):
             self.fitregion = fitregion
         self.fitMode = fitMode
 
-        self.cut = 'MR>=450. && Rsq>=0.10 && nBtag>1'
+        self.cut = 'MR>=450. && Rsq>=0.15 && nBtag>=1'
 
     def addTailPdf(self, flavour, doSYS):
         label = '_%s' % flavour
@@ -164,13 +166,13 @@ class RazorBox(Box.Box):
         self.fixPars("MR0_")
         self.fixPars("R0_")
         self.fixPars("b_")
-        # self.fixPars("f1")
-        # self.fixPars("f2")
-        # self.fixPars("f3")
+        self.fixPars("f1")
+        self.fixPars("f2")
+        self.fixPars("f3")
 
         def floatSomething(z):
             """Switch on or off whatever you want here"""
-            if(self.btag == "Btag") and (z == "TTj2b" or z == "TTj3b"):
+            if (self.btag == "Btag") and z == "TTj2b":
                 self.floatBTagf3(z)
             self.floatComponent(z)
             self.floatYield(z)
@@ -194,7 +196,7 @@ class RazorBox(Box.Box):
         data = RootTools.getDataSet(inputFile, 'RMRTree', self.cut)
         # data = self.workspace.data("data_obs")
         # adding the 3b component for testing
-        N_TTj3b = self.workspace.var("Ntot_TTj3b").getVal()
+        # N_TTj3b = self.workspace.var("Ntot_TTj3b").getVal()
 
         # in the case that the input file is an MC input file
         if data is None or not data:
@@ -211,8 +213,8 @@ class RazorBox(Box.Box):
             data2b = data.reduce("nBtag>=2&&nBtag<3")
             data3b = data.reduce("nBtag>=3&&nBtag<4")
             if data3b.numEntries() == 0:
-                self.workspace.var("f3_TTj3b").setVal(0.)
-                self.workspace.var("f3_TTj3b").setConstant(rt.kTRUE)
+                # self.workspace.var("f3_TTj3b").setVal(0.)
+                # self.workspace.var("f3_TTj3b").setConstant(rt.kTRUE)
                 self.workspace.var("f3_TTj2b").setVal(0.)
                 self.workspace.var("f3_TTj2b").setConstant(rt.kTRUE)
                 self.workspace.var("f3_Vpj").setVal(0.)
@@ -239,25 +241,29 @@ class RazorBox(Box.Box):
         # compute the expected yield/(pb-1)
         self.workspace.var('sigma').setVal(signalXsec)
 
-        #set the MC efficiency relative to the number of events generated
+        # set the MC efficiency relative to the number of events generated
         # compute the signal yield multiplying by the efficiency
-        self.workspace.factory("expr::Ntot_%s('@0*@1*@2*@3',sigma, lumi, eff, eff_value_%s)" %(modelName,self.name))
-        extended = self.workspace.factory("RooExtendPdf::eBinPDF_%s(%s, Ntot_%s)" % (modelName,signalModel,modelName))
+        self.workspace.factory("expr::Ntot_%s('@0*@1*@2*@3',sigma, lumi, eff, eff_value_%s)" % (modelName, self.name))
+        extended = self.workspace.factory("RooExtendPdf::eBinPDF_%s(%s, Ntot_%s)" % (modelName, signalModel, modelName))
 
         theRealFitModel = "fitmodel"
 
         SpBPdfList = rt.RooArgList(self.workspace.pdf("eBinPDF_Signal"))
         # prevent nan when there is no signal expected
-        if self.workspace.var("Ntot_TTj1b").getVal() > 0: SpBPdfList.add(self.workspace.pdf("ePDF_TTj1b"))
-        if self.workspace.var("Ntot_TTj2b").getVal() > 0: SpBPdfList.add(self.workspace.pdf("ePDF_TTj2b"))
-        if self.workspace.var("Ntot_Vpj").getVal() > 0: SpBPdfList.add(self.workspace.pdf("ePDF_Vpj"))
+        if self.workspace.var("Ntot_TTj1b").getVal() > 0:
+            SpBPdfList.add(self.workspace.pdf("ePDF_TTj1b"))
+        if self.workspace.var("Ntot_TTj2b").getVal() > 0:
+            SpBPdfList.add(self.workspace.pdf("ePDF_TTj2b"))
+        if self.workspace.var("Ntot_Vpj").getVal() > 0:
+            SpBPdfList.add(self.workspace.pdf("ePDF_Vpj"))
 
-        add = rt.RooAddPdf('%s_%sCombined' % (theRealFitModel,modelName),'Signal+BG PDF',
-                           SpBPdfList)
+        add = rt.RooAddPdf('%s_%sCombined' % (theRealFitModel, modelName),
+                           'Signal+BG PDF', SpBPdfList)
 
         self.importToWS(add)
         self.signalmodel = add.GetName()
         return extended.GetName()
+
 
     def plot(self, inputFile, store, box, data=None, fitmodel="none", frName="none"):
 
@@ -575,8 +581,8 @@ class RazorBox(Box.Box):
         data = data.reduce(rangeCut)
 
         # save original event yields
-        if self.workspace.var("Ntot_TTj3b") is not None:
-            N_TTj3b = self.workspace.var("Ntot_TTj3b").getVal()
+        # if self.workspace.var("Ntot_TTj3b") is not None:
+        #     N_TTj3b = self.workspace.var("Ntot_TTj3b").getVal()
         if self.workspace.var("Ntot_TTj2b") is not None:
             N_TTj2b = self.workspace.var("Ntot_TTj2b").getVal()
         if self.workspace.var("Ntot_TTj1b") is not None:
@@ -594,7 +600,7 @@ class RazorBox(Box.Box):
         self.workspace.var("Ntot_Vpj").setVal(0.)
         self.workspace.var("Ntot_TTj1b").setVal(0.)
         self.workspace.var("Ntot_TTj2b").setVal(0.)
-        self.workspace.var("Ntot_TTj3b").setVal(0.)
+        # self.workspace.var("Ntot_TTj3b").setVal(0.)
         if N_Signal > 1:
             toyDataSignal = self.workspace.pdf(self.signalmodel).generate(self.workspace.set('variables'), int(50*(N_Signal)))
             beforeCutSignal = float(toyDataSignal.sumEntries())
@@ -608,7 +614,7 @@ class RazorBox(Box.Box):
         self.workspace.var("Ntot_Vpj").setVal(N_Vpj)
         self.workspace.var("Ntot_TTj1b").setVal(0.)
         self.workspace.var("Ntot_TTj2b").setVal(0.)
-        self.workspace.var("Ntot_TTj3b").setVal(0.)
+        # self.workspace.var("Ntot_TTj3b").setVal(0.)
         if N_Vpj > 1:
             toyDataVpj = self.workspace.pdf(fitmodel).generate(self.workspace.set('variables'), int(50*(N_Vpj)))
             beforeCutVpj = float(toyDataVpj.sumEntries())
@@ -621,7 +627,7 @@ class RazorBox(Box.Box):
         self.workspace.var("Ntot_Vpj").setVal(0.)
         self.workspace.var("Ntot_TTj1b").setVal(N_TTj1b)
         self.workspace.var("Ntot_TTj2b").setVal(0.)
-        self.workspace.var("Ntot_TTj3b").setVal(0.)
+        # self.workspace.var("Ntot_TTj3b").setVal(0.)
         if N_TTj1b > 1:
             toyDataTTj1b = self.workspace.pdf(fitmodel).generate(self.workspace.set('variables'), int(50*(N_TTj1b)))
             beforeCutTTj1b = float(toyDataTTj1b.sumEntries())
@@ -636,7 +642,7 @@ class RazorBox(Box.Box):
         self.workspace.var("Ntot_Vpj").setVal(0.)
         self.workspace.var("Ntot_TTj1b").setVal(0.)
         self.workspace.var("Ntot_TTj2b").setVal(N_TTj2b)
-        self.workspace.var("Ntot_TTj3b").setVal(0.)
+        # self.workspace.var("Ntot_TTj3b").setVal(0.)
         if N_TTj2b > 1:
             toyDataTTj2b = self.workspace.pdf(fitmodel).generate(self.workspace.set('variables'), int(50*(N_TTj2b)))
             beforeCutTTj2b = float(toyDataTTj2b.sumEntries())
@@ -644,17 +650,17 @@ class RazorBox(Box.Box):
             afterCutTTj2b = float(toyDataTTj2b.sumEntries())
             effCutTTj2b = afterCutTTj2b / beforeCutTTj2b
 
-        effCutTTj3b = 1
-        self.workspace.var("Ntot_Vpj").setVal(0.)
-        self.workspace.var("Ntot_TTj1b").setVal(0.)
-        self.workspace.var("Ntot_TTj2b").setVal(0.)
-        self.workspace.var("Ntot_TTj3b").setVal(N_TTj3b)
-        if N_TTj3b > 1:
-            toyDataTTj3b = self.workspace.pdf(fitmodel).generate(self.workspace.set('variables'), int(50*(N_TTj3b)))
-            beforeCutTTj3b = float(toyDataTTj3b.sumEntries())
-            toyDataTTj3b = toyDataTTj3b.reduce(rangeCut)
-            afterCutTTj3b = float(toyDataTTj3b.sumEntries())
-            effCutTTj3b = afterCutTTj3b / beforeCutTTj3b
+        # effCutTTj3b = 1
+        # self.workspace.var("Ntot_Vpj").setVal(0.)
+        # self.workspace.var("Ntot_TTj1b").setVal(0.)
+        # self.workspace.var("Ntot_TTj2b").setVal(0.)
+        # self.workspace.var("Ntot_TTj3b").setVal(N_TTj3b)
+        # if N_TTj3b > 1:
+        #     toyDataTTj3b = self.workspace.pdf(fitmodel).generate(self.workspace.set('variables'), int(50*(N_TTj3b)))
+        #     beforeCutTTj3b = float(toyDataTTj3b.sumEntries())
+        #     toyDataTTj3b = toyDataTTj3b.reduce(rangeCut)
+        #     afterCutTTj3b = float(toyDataTTj3b.sumEntries())
+        #     effCutTTj3b = afterCutTTj3b / beforeCutTTj3b
 
 
         # set the event yields back to their original values
@@ -662,9 +668,9 @@ class RazorBox(Box.Box):
         print "EFFICIENCIES for this rangeCut"
         print "TTj1b %f" % effCutTTj1b
         print "TTj2b %f" % effCutTTj2b
-        print "TTj3b %f" % effCutTTj3b
+        # print "TTj3b %f" % effCutTTj3b
         print "Vpj %f" % effCutVpj
-        self.workspace.var("Ntot_TTj3b").setVal(N_TTj3b)
+        # self.workspace.var("Ntot_TTj3b").setVal(N_TTj3b)
         self.workspace.var("Ntot_TTj2b").setVal(N_TTj2b)
         self.workspace.var("Ntot_TTj1b").setVal(N_TTj1b)
         self.workspace.var("Ntot_Vpj").setVal(N_Vpj)
@@ -686,7 +692,7 @@ class RazorBox(Box.Box):
         histoToyVpj = self.setPoissonErrors(rt.TH1D("histoToyVpj", "histoToyVpj", len(bins)-1, xedge))
         histoToyTTj1b = self.setPoissonErrors(rt.TH1D("histoToyTTj1b", "histoToyTTj1b", len(bins)-1, xedge))
         histoToyTTj2b = self.setPoissonErrors(rt.TH1D("histoToyTTj2b", "histoToyTTj2b", len(bins)-1, xedge))
-        histoToyTTj3b = self.setPoissonErrors(rt.TH1D("histoToyTTj3b", "histoToyTTj3b", len(bins)-1, xedge))
+        # histoToyTTj3b = self.setPoissonErrors(rt.TH1D("histoToyTTj3b", "histoToyTTj3b", len(bins)-1, xedge))
 
         def setName(h, name):
             h.SetName('%s_%s_%s_ALLCOMPONENTS' % (h.GetName(), name, '_'.join(ranges)))
@@ -734,8 +740,8 @@ class RazorBox(Box.Box):
             toyDataTTj1b.fillHistogram(histoToyTTj1b, rt.RooArgList(self.workspace.var(varname)))
         if N_TTj2b > 1:
             toyDataTTj2b.fillHistogram(histoToyTTj2b, rt.RooArgList(self.workspace.var(varname)))
-        if N_TTj3b > 1:
-            toyDataTTj3b.fillHistogram(histoToyTTj3b, rt.RooArgList(self.workspace.var(varname)))
+        # if N_TTj3b > 1:
+        #     toyDataTTj3b.fillHistogram(histoToyTTj3b, rt.RooArgList(self.workspace.var(varname)))
         # make the total
         if self.workspace.var("Ntot_Vpj") != None and N_Vpj > 1:
             histoToy.Add(histoToyVpj, +1)
@@ -743,31 +749,30 @@ class RazorBox(Box.Box):
             histoToy.Add(histoToyTTj1b, +1)
         if self.workspace.var("Ntot_TTj2b") != None and N_TTj2b > 1:
             histoToy.Add(histoToyTTj2b, +1)
-        if self.workspace.var("Ntot_TTj3b") != None and N_TTj3b > 1:
-            histoToy.Add(histoToyTTj3b, +1)
+        # if self.workspace.var("Ntot_TTj3b") != None and N_TTj3b > 1:
+        #     histoToy.Add(histoToyTTj3b, +1)
 
         # We shouldn't scale to the data, we should scale to our prediction
         # scaleFactor = histoData.Integral()/histoToy.Integral()
         print "DATA NORM %f" % histoData.Integral()
-        print "FIT NORM  %f" % (N_TTj3b * effCutTTj3b +
-                                N_TTj2b * effCutTTj2b + N_Vpj * effCutVpj +
+        print "FIT NORM  %f" % (N_TTj2b * effCutTTj2b + N_Vpj * effCutVpj +
                                 N_TTj1b * effCutTTj1b)
         scaleFactor = (N_TTj2b * effCutTTj2b + N_Vpj * effCutVpj +
-                       N_TTj1b * effCutTTj1b + N_TTj3b * effCutTTj3b) /\
+                       N_TTj1b * effCutTTj1b) /\
             histoToy.Integral()
         # scaleFactor = (N_TTj2b+N_Vpj+N_TTj1b)/histoToy.Integral()
         print "scaleFactor = %f" % scaleFactor
 
         histoToySignal.Scale(0.02)
-        histoToyTTj3b.Scale(0.02)
+        # histoToyTTj3b.Scale(0.02)
         histoToyTTj2b.Scale(0.02)
         histoToyVpj.Scale(0.02)
         histoToyTTj1b.Scale(0.02)
-        SetErrors(histoToyTTj3b)
+        # SetErrors(histoToyTTj3b)
         SetErrors(histoToyTTj2b)
         SetErrors(histoToyVpj)
         SetErrors(histoToyTTj1b)
-        setName(histoToyTTj3b, varname)
+        # setName(histoToyTTj3b, varname)
         setName(histoToyTTj2b, varname)
         setName(histoToyVpj, varname)
         setName(histoToyTTj1b, varname)
@@ -775,8 +780,8 @@ class RazorBox(Box.Box):
         histoToyTTj1b.SetLineWidth(2)
         histoToyTTj2b.SetLineColor(rt.kRed)
         histoToyTTj2b.SetLineWidth(2)
-        histoToyTTj3b.SetLineColor(rt.kYellow)
-        histoToyTTj3b.SetLineWidth(2)
+        # histoToyTTj3b.SetLineColor(rt.kYellow)
+        # histoToyTTj3b.SetLineWidth(2)
         histoToyVpj.SetLineColor(rt.kGreen)
         histoToyVpj.SetLineWidth(2)
 
@@ -794,14 +799,14 @@ class RazorBox(Box.Box):
         rt.gStyle.SetOptTitle(0)
 
         showTTj2b = (N_TTj2b > 0)
-        showTTj3b = (N_TTj3b > 0)
+        # showTTj3b = (N_TTj3b > 0)
         showVpj = (N_Vpj > 0)
         showTTj1b = (N_TTj1b > 0)
         showSignal = (N_Signal > 0)
 
         # legend
-        if showTTj3b and showTTj2b:
-            leg = rt.TLegend(0.7, 0.45, 0.93, 0.93)
+        # if showTTj3b and showTTj2b:
+        #     leg = rt.TLegend(0.7, 0.45, 0.93, 0.93)
         if showTTj2b and showTTj1b and showVpj and showSignal:
             leg = rt.TLegend(0.7, 0.45, 0.93, 0.93)
         elif showTTj2b and showTTj1b and showVpj:
@@ -826,8 +831,8 @@ class RazorBox(Box.Box):
                 leg.AddEntry(histoToyTTj1b, "1 b-tag", "l")
         if showTTj2b:
             leg.AddEntry(histoToyTTj2b, "#geq 2 b-tag", "l")
-        if showTTj3b:
-            leg.AddEntry(histoToyTTj3b, "#3 b-tag", "l")
+        # if showTTj3b:
+        #     leg.AddEntry(histoToyTTj3b, "#3 b-tag", "l")
         if showSignal:
             leg.AddEntry(histoToySignal, "Signal", "lf")
 
@@ -953,16 +958,16 @@ class RazorBox(Box.Box):
                 # c3.SetAlpha(1.0)
                 histoToyTTj2b.SetFillColor(rt.kRed-4)
             histoToyTTj2b.DrawCopy('histsame')
-        if self.workspace.var("Ntot_TTj3b").getVal():
-            histoToyTTj3b.DrawCopy('histsame')
-            c3 = rt.gROOT.GetColor(rt.kYellow)
-            # c3.SetAlpha(1.0)
-            histoToyTTj3b.SetFillStyle(0)
-            if varname == "nBtag":
-                histoToyTTj3b.SetFillStyle(1001)
-                # c3.SetAlpha(1.0)
-                histoToyTTj3b.SetFillColor(rt.kYellow-4)
-            histoToyTTj3b.DrawCopy('histsame')
+        # if self.workspace.var("Ntot_TTj3b").getVal():
+        #     histoToyTTj3b.DrawCopy('histsame')
+        #     c3 = rt.gROOT.GetColor(rt.kYellow)
+        #     # c3.SetAlpha(1.0)
+        #     histoToyTTj3b.SetFillStyle(0)
+        #     if varname == "nBtag":
+        #         histoToyTTj3b.SetFillStyle(1001)
+        #         # c3.SetAlpha(1.0)
+        #         histoToyTTj3b.SetFillColor(rt.kYellow-4)
+        #     histoToyTTj3b.DrawCopy('histsame')
         # total
         if varname == "nBtag":
             histoToy.SetFillColor(rt.kBlue-10)

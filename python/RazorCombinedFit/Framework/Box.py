@@ -102,7 +102,7 @@ class Box(object):
             print 'WARNING:: Name decorator provided for fitmodel was None'
         return self.fitmodel
 
-    def getFitPDF(self, name=None,graphViz='graphViz'):
+    def getFitPDF(self, name=None, graphViz='graphViz'):
         if name is None:
             name = self.fitmodel
         pdf = self.workspace.pdf(name)
@@ -112,8 +112,8 @@ class Box(object):
             return pdf
 
         #save as a dotty file for easy inspection
-        if graphViz is not None:
-            pdf.graphVizTree('%s_%s.dot' % (pdf.GetName(),graphViz))
+        # if graphViz is not None:
+        #     pdf.graphVizTree('%s_%s.dot' % (pdf.GetName(),graphViz))
         return pdf
 
     def getMCStudy(self, fitmodel=None, genmodel=None, *options):

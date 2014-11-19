@@ -6,7 +6,8 @@ import sys
 if __name__ == '__main__':
     ROOT_FILE = sys.argv[1]
     FILE = rt.TFile.Open(ROOT_FILE)
-    HIST = FILE.Get('wHisto')
+    # HIST = FILE.Get('wHisto')
+    HIST = FILE.Get('BJetLS/histoToy_Rsq_FULL_ALLCOMPONENTS')
     x_axis = HIST.GetXaxis()
     y_axis = HIST.GetYaxis()
     z_axis = HIST.GetZaxis()
